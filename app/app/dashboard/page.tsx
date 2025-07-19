@@ -61,17 +61,17 @@ const quickActions = [
     color: 'bg-blue-500',
   },
   {
-    title: 'Add Prospect',
-    description: 'Add new lending prospect to CCC database',
+    title: 'Manage Prospects',
+    description: 'View and manage lending prospects in CCC database',
     icon: Database,
-    href: '/dashboard/prospects/new',
+    href: '/dashboard/prospects',
     color: 'bg-green-500',
   },
   {
-    title: 'Track Outreach',
-    description: 'Log loan officer outreach activities',
+    title: 'Manage Outreach',
+    description: 'View and manage loan officer outreach activities',
     icon: MessageSquare,
-    href: '/dashboard/outreach/new',
+    href: '/dashboard/outreach',
     color: 'bg-purple-500',
   },
   {
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                 ))}
               </div>
               <Button variant="outline" className="w-full mt-4" asChild>
-                <Link href="/dashboard/activity">View All Activity</Link>
+                <Link href="/dashboard/analytics">View All Activity</Link>
               </Button>
             </CardContent>
           </Card>

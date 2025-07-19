@@ -3,526 +3,408 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Settings, Save, Shield, Bell, Database, Mail, Users, Building2, AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Key, 
+  TestTube, 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Loader2,
+  Shield,
+  Database,
+  Settings as SettingsIcon
+} from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
-interface SystemSettings {
-  general: {
-    companyName: string;
-    companyEmail: string;
-    companyPhone: string;
-    companyAddress: string;
-    timezone: string;
-    dateFormat: string;
-  };
-  lending: {
-    minMonthlyRevenue: number;
-    minBusinessAge: number;
-    minCreditScore: number;
-    maxLoanAmount: number;
-    defaultLoanTerm: number;
-    interestRate: number;
-  };
-  notifications: {
-    emailNotifications: boolean;
-    smsNotifications: boolean;
-    prospectAlerts: boolean;
-    submissionAlerts: boolean;
-    weeklyReports: boolean;
-    monthlyReports: boolean;
-  };
-  security: {
-    sessionTimeout: number;
-    requireTwoFactor: boolean;
-    passwordExpiry: number;
-    allowGuestAccess: boolean;
-  };
+interface ApiKeyStatus {
+  status: 'NOT_CONFIGURED' | 'VALID' | 'INVALID' | 'EXPIRED' | 'TESTING';
+  lastTested: string | null;
+  hasKey: boolean;
 }
 
 export default function SettingsPage() {
   const { data: session } = useSession();
-  const [settings, setSettings] = useState<SystemSettings | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus>({
+    status: 'NOT_CONFIGURED',
+    lastTested: null,
+    hasKey: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('general');
 
   useEffect(() => {
-    fetchSettings();
+    fetchApiKeyStatus();
   }, []);
 
-  const fetchSettings = async () => {
+  const fetchApiKeyStatus = async () => {
     try {
-      const response = await fetch('/api/settings');
+      const response = await fetch('/api/settings/apify-key');
       if (response.ok) {
         const data = await response.json();
-        setSettings(data.settings);
+        setApiKeyStatus(data);
       }
     } catch (error) {
-      console.error('Error fetching settings:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching API key status:', error);
     }
   };
 
-  // Mock settings for demonstration
-  const mockSettings: SystemSettings = {
-    general: {
-      companyName: 'Commercial Capital Connect',
-      companyEmail: 'contact@commercialcapitalconnect.com',
-      companyPhone: '+1 (555) 123-4567',
-      companyAddress: '123 Business Blvd, Suite 100, Atlanta, GA 30309',
-      timezone: 'America/New_York',
-      dateFormat: 'MM/DD/YYYY'
-    },
-    lending: {
-      minMonthlyRevenue: 17000,
-      minBusinessAge: 6,
-      minCreditScore: 600,
-      maxLoanAmount: 5000000,
-      defaultLoanTerm: 60,
-      interestRate: 8.5
-    },
-    notifications: {
-      emailNotifications: true,
-      smsNotifications: false,
-      prospectAlerts: true,
-      submissionAlerts: true,
-      weeklyReports: true,
-      monthlyReports: true
-    },
-    security: {
-      sessionTimeout: 30,
-      requireTwoFactor: false,
-      passwordExpiry: 90,
-      allowGuestAccess: false
+  const handleSaveApiKey = async () => {
+    if (!apiKey.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter your Apify API key',
+        variant: 'destructive',
+      });
+      return;
     }
-  };
 
-  const displaySettings = settings || mockSettings;
-
-  const handleSave = async (section: keyof SystemSettings) => {
     setSaving(true);
     try {
-      const response = await fetch('/api/settings', {
-        method: 'PUT',
+      const response = await fetch('/api/settings/apify-key', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          section,
-          data: displaySettings[section]
-        }),
+        body: JSON.stringify({ apiKey: apiKey.trim() }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        // Show success message
-        console.log('Settings saved successfully');
+        toast({
+          title: 'Success',
+          description: data.message || 'API key saved and tested successfully',
+        });
+        setApiKey('');
+        fetchApiKeyStatus();
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to save API key',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
-      console.error('Error saving settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save API key',
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
   };
 
-  const updateSetting = (section: keyof SystemSettings, field: string, value: any) => {
-    if (!displaySettings) return;
-    
-    const updatedSettings = {
-      ...displaySettings,
-      [section]: {
-        ...displaySettings[section],
-        [field]: value
+  const handleTestApiKey = async () => {
+    setTesting(true);
+    try {
+      const response = await fetch('/api/settings/apify-key/test', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: data.isValid ? 'Success' : 'Error',
+          description: data.message,
+          variant: data.isValid ? 'default' : 'destructive',
+        });
+        fetchApiKeyStatus();
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Failed to test API key',
+          variant: 'destructive',
+        });
       }
-    };
-    setSettings(updatedSettings);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to test API key connection',
+        variant: 'destructive',
+      });
+    } finally {
+      setTesting(false);
+    }
   };
 
-  if (loading && !settings) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Settings className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
-          <p className="text-gray-500">Loading settings...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleRemoveApiKey = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/settings/apify-key', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'API key removed successfully',
+        });
+        setApiKey('');
+        fetchApiKeyStatus();
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to remove API key',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove API key',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'VALID':
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Valid
+          </Badge>
+        );
+      case 'INVALID':
+        return (
+          <Badge variant="destructive">
+            <XCircle className="h-3 w-3 mr-1" />
+            Invalid
+          </Badge>
+        );
+      case 'TESTING':
+        return (
+          <Badge variant="secondary">
+            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+            Testing
+          </Badge>
+        );
+      case 'EXPIRED':
+        return (
+          <Badge variant="outline" className="border-orange-200 text-orange-700">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Expired
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Not Configured
+          </Badge>
+        );
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">CCC System Settings</h1>
-          <p className="text-gray-600">Configure system preferences and operational parameters</p>
-        </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-          <div className="flex items-center space-x-2">
-            <Shield className="h-4 w-4 text-yellow-600" />
-            <span className="text-sm text-yellow-800">Admin Access Required</span>
-          </div>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+        <p className="text-gray-600 mt-2">
+          Configure your CCC Pipeline system settings and integrations
+        </p>
       </div>
 
-      {/* Settings Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="lending">Lending Criteria</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="general" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Building2 className="h-5 w-5" />
-                <span>Company Information</span>
-              </CardTitle>
-              <CardDescription>Basic company details and contact information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    value={displaySettings?.general?.companyName || ''}
-                    onChange={(e) => updateSetting('general', 'companyName', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="companyEmail">Company Email</Label>
-                  <Input
-                    id="companyEmail"
-                    type="email"
-                    value={displaySettings?.general?.companyEmail || ''}
-                    onChange={(e) => updateSetting('general', 'companyEmail', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="companyPhone">Company Phone</Label>
-                  <Input
-                    id="companyPhone"
-                    value={displaySettings?.general?.companyPhone || ''}
-                    onChange={(e) => updateSetting('general', 'companyPhone', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Select 
-                    value={displaySettings?.general?.timezone || ''} 
-                    onValueChange={(value) => updateSetting('general', 'timezone', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                      <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                      <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                      <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+      {/* API Configuration Section */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center space-x-2">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <Database className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <CardTitle className="text-xl">Apify API Integration</CardTitle>
+              <CardDescription>
+                Configure your personal Apify API key to access live healthcare business data
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Current Status */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <div className="font-medium text-gray-900">Current Status</div>
+              <div className="text-sm text-gray-600">
+                {apiKeyStatus.lastTested 
+                  ? `Last tested: ${new Date(apiKeyStatus.lastTested).toLocaleString()}`
+                  : 'Never tested'
+                }
               </div>
+            </div>
+            {getStatusBadge(apiKeyStatus.status)}
+          </div>
+
+          {/* Instructions */}
+          <Alert>
+            <Shield className="h-4 w-4" />
+            <AlertDescription>
               <div className="space-y-2">
-                <Label htmlFor="companyAddress">Company Address</Label>
-                <Textarea
-                  id="companyAddress"
-                  value={displaySettings?.general?.companyAddress || ''}
-                  onChange={(e) => updateSetting('general', 'companyAddress', e.target.value)}
-                  rows={3}
+                <p className="font-medium">How to get your Apify API key:</p>
+                <ol className="list-decimal list-inside space-y-1 text-sm">
+                  <li>
+                    Go to{' '}
+                    <a 
+                      href="https://console.apify.com/account/integrations" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 inline-flex items-center"
+                    >
+                      Apify Console → Integrations
+                      <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  </li>
+                  <li>Click "Create new token" and give it a name</li>
+                  <li>Copy the generated API key (starts with "apify_api_")</li>
+                  <li>Paste it below and click "Save & Test"</li>
+                </ol>
+              </div>
+            </AlertDescription>
+          </Alert>
+
+          {/* API Key Input */}
+          <div className="space-y-3">
+            <Label htmlFor="apiKey" className="text-sm font-medium">
+              Apify API Key
+            </Label>
+            <div className="flex space-x-2">
+              <div className="relative flex-1">
+                <Input
+                  id="apiKey"
+                  type={showApiKey ? 'text' : 'password'}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="apify_api_..."
+                  className="pr-10"
                 />
-              </div>
-              <div className="flex justify-end">
-                <Button 
-                  onClick={() => handleSave('general')}
-                  disabled={saving}
-                  className="bg-blue-600 hover:bg-blue-700"
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save General Settings'}
-                </Button>
+                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              <Button 
+                onClick={handleSaveApiKey} 
+                disabled={!apiKey.trim() || saving}
+                className="shrink-0"
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Key className="h-4 w-4 mr-2" />
+                )}
+                Save & Test
+              </Button>
+            </div>
+          </div>
 
-        <TabsContent value="lending" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Database className="h-5 w-5" />
-                <span>Lending Qualification Criteria</span>
-              </CardTitle>
-              <CardDescription>Set minimum requirements for prospect qualification</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="minMonthlyRevenue">Minimum Monthly Revenue ($)</Label>
-                  <Input
-                    id="minMonthlyRevenue"
-                    type="number"
-                    value={displaySettings?.lending?.minMonthlyRevenue || 0}
-                    onChange={(e) => updateSetting('lending', 'minMonthlyRevenue', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="minBusinessAge">Minimum Business Age (months)</Label>
-                  <Input
-                    id="minBusinessAge"
-                    type="number"
-                    value={displaySettings?.lending?.minBusinessAge || 0}
-                    onChange={(e) => updateSetting('lending', 'minBusinessAge', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="minCreditScore">Minimum Credit Score</Label>
-                  <Input
-                    id="minCreditScore"
-                    type="number"
-                    value={displaySettings?.lending?.minCreditScore || 0}
-                    onChange={(e) => updateSetting('lending', 'minCreditScore', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="maxLoanAmount">Maximum Loan Amount ($)</Label>
-                  <Input
-                    id="maxLoanAmount"
-                    type="number"
-                    value={displaySettings?.lending?.maxLoanAmount || 0}
-                    onChange={(e) => updateSetting('lending', 'maxLoanAmount', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="defaultLoanTerm">Default Loan Term (months)</Label>
-                  <Input
-                    id="defaultLoanTerm"
-                    type="number"
-                    value={displaySettings?.lending?.defaultLoanTerm || 0}
-                    onChange={(e) => updateSetting('lending', 'defaultLoanTerm', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="interestRate">Interest Rate (%)</Label>
-                  <Input
-                    id="interestRate"
-                    type="number"
-                    step="0.1"
-                    value={displaySettings?.lending?.interestRate || 0}
-                    onChange={(e) => updateSetting('lending', 'interestRate', parseFloat(e.target.value))}
-                  />
-                </div>
-              </div>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-blue-900">Impact Notice</h4>
-                    <p className="text-sm text-blue-700">
-                      Changes to lending criteria will affect future prospect qualification scoring. 
-                      Existing prospects will be re-evaluated based on new criteria.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button 
-                  onClick={() => handleSave('lending')}
-                  disabled={saving}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save Lending Criteria'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          {/* Action Buttons */}
+          {apiKeyStatus.hasKey && (
+            <div className="flex space-x-3">
+              <Button
+                variant="outline"
+                onClick={handleTestApiKey}
+                disabled={testing || apiKeyStatus.status === 'TESTING'}
+                size="sm"
+              >
+                {testing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <TestTube className="h-4 w-4 mr-2" />
+                )}
+                Test Connection
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleRemoveApiKey}
+                disabled={loading}
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <XCircle className="h-4 w-4 mr-2" />
+                )}
+                Remove Key
+              </Button>
+            </div>
+          )}
 
-        <TabsContent value="notifications" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Bell className="h-5 w-5" />
-                <span>Notification Preferences</span>
-              </CardTitle>
-              <CardDescription>Configure notification settings for the team</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="emailNotifications" className="text-base">Email Notifications</Label>
-                    <p className="text-sm text-gray-600">Send notifications via email</p>
-                  </div>
-                  <Switch
-                    id="emailNotifications"
-                    checked={displaySettings?.notifications?.emailNotifications || false}
-                    onCheckedChange={(checked) => updateSetting('notifications', 'emailNotifications', checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="smsNotifications" className="text-base">SMS Notifications</Label>
-                    <p className="text-sm text-gray-600">Send notifications via SMS</p>
-                  </div>
-                  <Switch
-                    id="smsNotifications"
-                    checked={displaySettings?.notifications?.smsNotifications || false}
-                    onCheckedChange={(checked) => updateSetting('notifications', 'smsNotifications', checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="prospectAlerts" className="text-base">Prospect Alerts</Label>
-                    <p className="text-sm text-gray-600">Notifications for new prospects and updates</p>
-                  </div>
-                  <Switch
-                    id="prospectAlerts"
-                    checked={displaySettings?.notifications?.prospectAlerts || false}
-                    onCheckedChange={(checked) => updateSetting('notifications', 'prospectAlerts', checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="submissionAlerts" className="text-base">Submission Alerts</Label>
-                    <p className="text-sm text-gray-600">Notifications for loan submissions and decisions</p>
-                  </div>
-                  <Switch
-                    id="submissionAlerts"
-                    checked={displaySettings?.notifications?.submissionAlerts || false}
-                    onCheckedChange={(checked) => updateSetting('notifications', 'submissionAlerts', checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="weeklyReports" className="text-base">Weekly Reports</Label>
-                    <p className="text-sm text-gray-600">Automatic weekly performance reports</p>
-                  </div>
-                  <Switch
-                    id="weeklyReports"
-                    checked={displaySettings?.notifications?.weeklyReports || false}
-                    onCheckedChange={(checked) => updateSetting('notifications', 'weeklyReports', checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="monthlyReports" className="text-base">Monthly Reports</Label>
-                    <p className="text-sm text-gray-600">Automatic monthly analytics reports</p>
-                  </div>
-                  <Switch
-                    id="monthlyReports"
-                    checked={displaySettings?.notifications?.monthlyReports || false}
-                    onCheckedChange={(checked) => updateSetting('notifications', 'monthlyReports', checked)}
-                  />
+          {/* Data Source Info */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-start space-x-3">
+              <div className="bg-blue-100 p-1 rounded">
+                <Database className="h-4 w-4 text-blue-600" />
+              </div>
+              <div className="flex-1 text-sm">
+                <div className="font-medium text-blue-900 mb-1">Data Source Impact</div>
+                <div className="text-blue-700 space-y-1">
+                  <p>
+                    <strong>With API key:</strong> Research dashboard will scrape live healthcare businesses from Google Maps
+                  </p>
+                  <p>
+                    <strong>Without API key:</strong> Research dashboard will use sample/mock data for demonstration
+                  </p>
                 </div>
               </div>
-              <div className="flex justify-end">
-                <Button 
-                  onClick={() => handleSave('notifications')}
-                  disabled={saving}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save Notification Settings'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
 
-        <TabsContent value="security" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Shield className="h-5 w-5" />
-                <span>Security Settings</span>
-              </CardTitle>
-              <CardDescription>Configure security and access control settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
-                  <Input
-                    id="sessionTimeout"
-                    type="number"
-                    value={displaySettings?.security?.sessionTimeout || 0}
-                    onChange={(e) => updateSetting('security', 'sessionTimeout', parseInt(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="passwordExpiry">Password Expiry (days)</Label>
-                  <Input
-                    id="passwordExpiry"
-                    type="number"
-                    value={displaySettings?.security?.passwordExpiry || 0}
-                    onChange={(e) => updateSetting('security', 'passwordExpiry', parseInt(e.target.value))}
-                  />
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="requireTwoFactor" className="text-base">Require Two-Factor Authentication</Label>
-                    <p className="text-sm text-gray-600">Force all users to enable 2FA</p>
-                  </div>
-                  <Switch
-                    id="requireTwoFactor"
-                    checked={displaySettings?.security?.requireTwoFactor || false}
-                    onCheckedChange={(checked) => updateSetting('security', 'requireTwoFactor', checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="allowGuestAccess" className="text-base">Allow Guest Access</Label>
-                    <p className="text-sm text-gray-600">Enable read-only access for guests</p>
-                  </div>
-                  <Switch
-                    id="allowGuestAccess"
-                    checked={displaySettings?.security?.allowGuestAccess || false}
-                    onCheckedChange={(checked) => updateSetting('security', 'allowGuestAccess', checked)}
-                  />
-                </div>
-              </div>
-              <div className="bg-red-50 p-4 rounded-lg">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-red-900">Security Warning</h4>
-                    <p className="text-sm text-red-700">
-                      Changes to security settings will affect all users immediately. 
-                      Ensure team members are notified of policy changes.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button 
-                  onClick={() => handleSave('security')}
-                  disabled={saving}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save Security Settings'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          {/* Security Notice */}
+          <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+            <div className="flex items-center space-x-1 mb-1">
+              <Shield className="h-3 w-3" />
+              <span className="font-medium">Security Notice</span>
+            </div>
+            Your API key is encrypted and stored securely. It's only used for authenticated requests to Apify's service and is never shared with third parties.
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Additional Settings Placeholder */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <div className="bg-gray-100 p-2 rounded-lg">
+              <SettingsIcon className="h-5 w-5 text-gray-600" />
+            </div>
+            <div>
+              <CardTitle className="text-xl">System Preferences</CardTitle>
+              <CardDescription>
+                Additional system configuration options
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-gray-500">
+            Additional settings will be available in future updates.
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

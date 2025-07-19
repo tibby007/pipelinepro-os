@@ -49,9 +49,10 @@ interface SearchResultsProps {
   };
   onAddProspect: (business: HealthcareBusiness) => void;
   dataSource?: string;
+  message?: string;
 }
 
-export function SearchResults({ businesses, searchCriteria, onAddProspect, dataSource }: SearchResultsProps) {
+export function SearchResults({ businesses, searchCriteria, onAddProspect, dataSource, message }: SearchResultsProps) {
   const [addingProspects, setAddingProspects] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
@@ -120,10 +121,15 @@ export function SearchResults({ businesses, searchCriteria, onAddProspect, dataS
                 </div>
                 {dataSource && (
                   <div className="flex items-center space-x-1">
-                    <div className={`w-2 h-2 rounded-full ${dataSource === 'apify' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                    <span className={`font-medium ${dataSource === 'apify' ? 'text-green-600' : 'text-yellow-600'}`}>
-                      {dataSource === 'apify' ? 'Live Data' : 'Sample Data'}
+                    <div className={`w-2 h-2 rounded-full ${dataSource === 'live' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                    <span className={`font-medium ${dataSource === 'live' ? 'text-green-600' : 'text-yellow-600'}`}>
+                      {dataSource === 'live' ? 'Live Data' : 'Sample Data'}
                     </span>
+                  </div>
+                )}
+                {message && (
+                  <div className="text-xs text-gray-500 ml-2" title={message}>
+                    {message}
                   </div>
                 )}
               </div>

@@ -1,10 +1,49 @@
 
 import { ApifyClient } from 'apify-client';
+import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
-// Initialize Apify client
-const apifyClient = new ApifyClient({
-  token: process.env.APIFY_API_TOKEN,
-});
+const prisma = new PrismaClient();
+
+// Encryption key for API keys (in production, use proper key management)
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-replace-in-production-32chars';
+
+function decrypt(encryptedText: string): string {
+  const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY);
+  let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
+
+// Get user-specific Apify client
+async function getUserApifyClient(userEmail: string): Promise<{ client: ApifyClient | null; hasValidKey: boolean }> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail },
+      select: {
+        apifyApiKey: true,
+        apifyKeyStatus: true,
+      },
+    });
+
+    if (!user?.apifyApiKey || user.apifyKeyStatus !== 'VALID') {
+      return { client: null, hasValidKey: false };
+    }
+
+    const decryptedKey = decrypt(user.apifyApiKey);
+    const client = new ApifyClient({ token: decryptedKey });
+    
+    return { client, hasValidKey: true };
+  } catch (error) {
+    console.error('Error getting user Apify client:', error);
+    return { client: null, hasValidKey: false };
+  }
+}
+
+// Fallback global client for system-level operations (optional)
+const globalApifyClient = process.env.APIFY_API_TOKEN 
+  ? new ApifyClient({ token: process.env.APIFY_API_TOKEN })
+  : null;
 
 export interface ApifyHealthcareBusiness {
   title: string;
@@ -176,13 +215,55 @@ function buildSearchQuery(criteria: SearchCriteria): string {
   return `${primaryTerm} near ${location}`;
 }
 
-export async function searchHealthcareBusinesses(criteria: SearchCriteria): Promise<{
+export async function searchHealthcareBusinesses(
+  criteria: SearchCriteria, 
+  userEmail?: string
+): Promise<{
   businesses: HealthcareBusiness[];
   totalResults: number;
   searchCriteria: SearchCriteria;
+  dataSource: 'live' | 'mock';
+  message?: string;
 }> {
+  let usingLiveData = false;
+  let apifyClient: ApifyClient | null = null;
+  let message = '';
+
+  // Try to get user-specific API client first
+  if (userEmail) {
+    const { client, hasValidKey } = await getUserApifyClient(userEmail);
+    if (hasValidKey && client) {
+      apifyClient = client;
+      usingLiveData = true;
+      message = 'Using your personal Apify API key for live data';
+    } else {
+      message = 'No valid API key configured - using sample data';
+    }
+  }
+
+  // Fallback to global client if available
+  if (!apifyClient && globalApifyClient) {
+    apifyClient = globalApifyClient;
+    usingLiveData = true;
+    message = 'Using system Apify API key for live data';
+  }
+
+  // If no API client available, return mock data
+  if (!apifyClient) {
+    console.log('No Apify client available, using mock data');
+    const mockBusinesses = getMockBusinesses(criteria);
+    return {
+      businesses: mockBusinesses,
+      totalResults: mockBusinesses.length,
+      searchCriteria: criteria,
+      dataSource: 'mock',
+      message: message || 'No API key configured - using sample data for demonstration',
+    };
+  }
+
   try {
     console.log('Starting Apify search with criteria:', criteria);
+    console.log('Using live data:', usingLiveData);
     
     const searchQuery = buildSearchQuery(criteria);
     console.log('Search query:', searchQuery);
@@ -227,6 +308,8 @@ export async function searchHealthcareBusinesses(criteria: SearchCriteria): Prom
         businesses: [],
         totalResults: 0,
         searchCriteria: criteria,
+        dataSource: usingLiveData ? 'live' : 'mock',
+        message: 'No businesses found in this area',
       };
     }
 
@@ -278,6 +361,8 @@ export async function searchHealthcareBusinesses(criteria: SearchCriteria): Prom
       businesses,
       totalResults: businesses.length,
       searchCriteria: criteria,
+      dataSource: 'live',
+      message: message || `Found ${businesses.length} healthcare businesses using live data`,
     };
 
   } catch (error) {
@@ -290,6 +375,8 @@ export async function searchHealthcareBusinesses(criteria: SearchCriteria): Prom
       businesses: mockBusinesses,
       totalResults: mockBusinesses.length,
       searchCriteria: criteria,
+      dataSource: 'mock',
+      message: `Live data failed - using sample data (Error: ${error instanceof Error ? error.message : 'Unknown error'})`,
     };
   }
 }

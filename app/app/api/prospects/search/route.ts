@@ -34,11 +34,12 @@ export async function GET(req: NextRequest) {
     };
 
     console.log('API: Starting healthcare business search with criteria:', searchCriteria);
+    console.log('API: User email:', session.user?.email);
 
-    // Use Apify to search for real healthcare businesses
-    const searchResults = await searchHealthcareBusinesses(searchCriteria);
+    // Use Apify to search for real healthcare businesses with user-specific API key
+    const searchResults = await searchHealthcareBusinesses(searchCriteria, session.user?.email);
 
-    console.log(`API: Found ${searchResults.businesses.length} businesses`);
+    console.log(`API: Found ${searchResults.businesses.length} businesses using ${searchResults.dataSource} data`);
 
     return NextResponse.json({
       success: true,
@@ -46,7 +47,9 @@ export async function GET(req: NextRequest) {
         businesses: searchResults.businesses,
         searchCriteria: searchResults.searchCriteria,
         totalResults: searchResults.totalResults,
-        source: 'apify', // Indicate this is real data from Apify
+        dataSource: searchResults.dataSource, // 'live' or 'mock'
+        message: searchResults.message,
+        source: searchResults.dataSource === 'live' ? 'apify' : 'mock', // Legacy field for compatibility
       },
     });
 

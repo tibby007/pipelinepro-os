@@ -51,6 +51,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // API Configuration
+  apifyApiKey   String?   // Encrypted Apify API key for user-specific data scraping
+  apifyKeyLastTested DateTime? // Last time the API key was tested
+  apifyKeyStatus ApiKeyStatus @default(NOT_CONFIGURED) // Status of the API key
+
   // Relationships
   prospects              Prospect[]
   outreachActivities     OutreachActivity[]
@@ -319,4 +324,12 @@ enum SubmissionStatus {
   APPROVED
   REJECTED
   ADDITIONAL_INFO_REQUIRED
+}
+
+enum ApiKeyStatus {
+  NOT_CONFIGURED
+  VALID
+  INVALID
+  EXPIRED
+  TESTING
 }

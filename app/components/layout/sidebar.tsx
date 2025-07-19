@@ -63,6 +63,12 @@ const navigation = [
     icon: BarChart3,
     description: 'CCC lending pipeline metrics',
   },
+  {
+    name: 'Settings',
+    href: '/dashboard/settings',
+    icon: Settings,
+    description: 'API configuration & preferences',
+  },
 ];
 
 const adminNavigation = [
@@ -71,12 +77,6 @@ const adminNavigation = [
     href: '/dashboard/team',
     icon: Users,
     description: 'Manage team members',
-  },
-  {
-    name: 'Settings',
-    href: '/dashboard/settings',
-    icon: Settings,
-    description: 'System configuration',
   },
 ];
 

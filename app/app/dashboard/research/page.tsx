@@ -40,7 +40,9 @@ interface SearchResult {
   businesses: HealthcareBusiness[];
   searchCriteria: SearchCriteria;
   totalResults: number;
-  source?: string;
+  source?: string; // Legacy field for compatibility
+  dataSource?: string; // 'live' or 'mock'
+  message?: string;
 }
 
 export default function ResearchPage() {
@@ -74,7 +76,9 @@ export default function ResearchPage() {
         businesses: data.data.businesses,
         searchCriteria: criteria,
         totalResults: data.data.totalResults,
-        source: data.data.source,
+        source: data.data.source, // Legacy field for compatibility
+        dataSource: data.data.dataSource,
+        message: data.data.message,
       });
 
       // Add to search history
@@ -85,10 +89,10 @@ export default function ResearchPage() {
         return newHistory;
       });
 
-      const sourceText = data.data.source === 'apify' ? 'real business data' : 'sample data';
+      const sourceText = data.data.dataSource === 'live' ? 'live data' : 'sample data';
       toast({
         title: 'Search completed',
-        description: `Found ${data.data.totalResults} healthcare businesses using ${sourceText}`,
+        description: data.data.message || `Found ${data.data.totalResults} healthcare businesses using ${sourceText}`,
       });
 
     } catch (error: any) {
@@ -244,7 +248,8 @@ export default function ResearchPage() {
           businesses={searchResults.businesses}
           searchCriteria={searchResults.searchCriteria}
           onAddProspect={handleAddProspect}
-          dataSource={searchResults.source}
+          dataSource={searchResults.dataSource}
+          message={searchResults.message}
         />
       ) : (
         <Card>
