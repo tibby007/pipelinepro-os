@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+
 import { Send, Building2, User, Calendar, CheckCircle, Clock, AlertCircle, DollarSign, Plus, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +38,7 @@ const LENDING_PARTNERS = [
 ];
 
 export default function SubmissionsPage() {
-  const { data: session } = useSession();
+
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

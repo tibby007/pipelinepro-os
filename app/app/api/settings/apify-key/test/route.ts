@@ -1,12 +1,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { PrismaClient } from '@prisma/client';
 import { ApifyClient } from 'apify-client';
 import crypto from 'crypto';
 
 const prisma = new PrismaClient();
+
+// Default user email for single-user system
+const DEFAULT_USER_EMAIL = 'john@doe.com';
 
 // Encryption key for API keys (in production, use proper key management)
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-replace-in-production-32chars';
@@ -19,30 +20,23 @@ function decrypt(encryptedText: string): string {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
-
     // Update status to testing
     await prisma.user.update({
-      where: { email: session.user.email },
+      where: { email: DEFAULT_USER_EMAIL },
       data: {
         apifyKeyStatus: 'TESTING',
       },
     });
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: DEFAULT_USER_EMAIL },
       select: { apifyApiKey: true },
     });
 
     if (!user?.apifyApiKey) {
       await prisma.user.update({
-        where: { email: session.user.email },
+        where: { email: DEFAULT_USER_EMAIL },
         data: {
           apifyKeyStatus: 'NOT_CONFIGURED',
         },
@@ -56,7 +50,7 @@ export async function POST(request: NextRequest) {
     
     // Update the status based on test result
     await prisma.user.update({
-      where: { email: session.user.email },
+      where: { email: DEFAULT_USER_EMAIL },
       data: {
         apifyKeyStatus: testResult.isValid ? 'VALID' : 'INVALID',
         apifyKeyLastTested: new Date(),
@@ -74,18 +68,16 @@ export async function POST(request: NextRequest) {
     console.error('Error testing API key:', error);
     
     // Reset status on error
-    if (session?.user?.email) {
-      try {
-        await prisma.user.update({
-          where: { email: session.user.email },
-          data: {
-            apifyKeyStatus: 'INVALID',
-            apifyKeyLastTested: new Date(),
-          },
-        });
-      } catch (updateError) {
-        console.error('Error updating status after test failure:', updateError);
-      }
+    try {
+      await prisma.user.update({
+        where: { email: DEFAULT_USER_EMAIL },
+        data: {
+          apifyKeyStatus: 'INVALID',
+          apifyKeyLastTested: new Date(),
+        },
+      });
+    } catch (updateError) {
+      console.error('Error updating status after test failure:', updateError);
     }
     
     return NextResponse.json({ 

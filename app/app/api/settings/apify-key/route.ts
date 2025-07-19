@@ -1,12 +1,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { PrismaClient } from '@prisma/client';
 import { ApifyClient } from 'apify-client';
 import crypto from 'crypto';
 
 const prisma = new PrismaClient();
+
+// Default user email for single-user system
+const DEFAULT_USER_EMAIL = 'john@doe.com';
 
 // Encryption key for API keys (in production, use proper key management)
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-replace-in-production-32chars';
@@ -27,14 +28,8 @@ function decrypt(encryptedText: string): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: DEFAULT_USER_EMAIL },
       select: {
         apifyKeyStatus: true,
         apifyKeyLastTested: true,
@@ -59,12 +54,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { apiKey } = await request.json();
     
     if (!apiKey || typeof apiKey !== 'string') {
@@ -85,7 +74,7 @@ export async function POST(request: NextRequest) {
     const encryptedKey = encrypt(apiKey);
     
     await prisma.user.update({
-      where: { email: session.user.email },
+      where: { email: DEFAULT_USER_EMAIL },
       data: {
         apifyApiKey: encryptedKey,
         apifyKeyStatus: testResult.isValid ? 'VALID' : 'INVALID',
@@ -107,14 +96,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     await prisma.user.update({
-      where: { email: session.user.email },
+      where: { email: DEFAULT_USER_EMAIL },
       data: {
         apifyApiKey: null,
         apifyKeyStatus: 'NOT_CONFIGURED',

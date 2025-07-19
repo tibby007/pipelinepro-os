@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+
 import { CheckSquare, Building2, DollarSign, Calendar, Users, MapPin, Phone, Mail, Star, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,7 +53,7 @@ const QUALIFICATION_CRITERIA = {
 };
 
 export default function QualificationPage() {
-  const { data: session } = useSession();
+
   const [prospects, setProspects] = useState<ProspectQualification[]>([]);
   const [loading, setLoading] = useState(true);
 

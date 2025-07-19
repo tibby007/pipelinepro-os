@@ -1,7 +1,6 @@
 
 'use client';
 
-import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -111,14 +110,12 @@ const recentActivity = [
 ];
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
-
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
         <h1 className="text-2xl font-bold mb-2">
-          Welcome back, {session?.user?.name?.split(' ')[0] || 'there'}!
+          CCC Healthcare Pipeline Dashboard
         </h1>
         <p className="text-blue-100 mb-4">
           CCC's internal operational dashboard for managing healthcare lending prospects and loan origination workflow.

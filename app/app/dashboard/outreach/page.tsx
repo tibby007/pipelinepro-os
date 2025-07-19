@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+
 import { MessageSquare, Phone, Mail, Calendar, Plus, Filter, Search, Building2, User, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,7 @@ interface OutreachActivity {
 }
 
 export default function OutreachPage() {
-  const { data: session } = useSession();
+
   const [activities, setActivities] = useState<OutreachActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
