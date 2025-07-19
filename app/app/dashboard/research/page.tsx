@@ -40,6 +40,7 @@ interface SearchResult {
   businesses: HealthcareBusiness[];
   searchCriteria: SearchCriteria;
   totalResults: number;
+  source?: string;
 }
 
 export default function ResearchPage() {
@@ -57,6 +58,11 @@ export default function ResearchPage() {
         radius: criteria.radius.toString(),
       });
 
+      toast({
+        title: 'Searching...',
+        description: 'Finding healthcare businesses using live data from Apify',
+      });
+
       const response = await fetch(`/api/prospects/search?${params}`);
       const data = await response.json();
 
@@ -68,6 +74,7 @@ export default function ResearchPage() {
         businesses: data.data.businesses,
         searchCriteria: criteria,
         totalResults: data.data.totalResults,
+        source: data.data.source,
       });
 
       // Add to search history
@@ -78,15 +85,17 @@ export default function ResearchPage() {
         return newHistory;
       });
 
+      const sourceText = data.data.source === 'apify' ? 'real business data' : 'sample data';
       toast({
         title: 'Search completed',
-        description: `Found ${data.data.totalResults} healthcare businesses`,
+        description: `Found ${data.data.totalResults} healthcare businesses using ${sourceText}`,
       });
 
     } catch (error: any) {
+      console.error('Search error:', error);
       toast({
         title: 'Search failed',
-        description: error.message || 'Failed to search for businesses',
+        description: error.message || 'Failed to search for businesses. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -235,6 +244,7 @@ export default function ResearchPage() {
           businesses={searchResults.businesses}
           searchCriteria={searchResults.searchCriteria}
           onAddProspect={handleAddProspect}
+          dataSource={searchResults.source}
         />
       ) : (
         <Card>
@@ -243,10 +253,20 @@ export default function ResearchPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               Start CCC Healthcare Lending Research
             </h3>
-            <p className="text-gray-500 max-w-md mx-auto">
-              Enter a location above to search for healthcare businesses that meet CCC's lending qualification criteria.
+            <p className="text-gray-500 max-w-md mx-auto mb-4">
+              Enter a location above to search for real healthcare businesses using Apify's web scraping technology.
               Find prospects with $17K+ monthly revenue and 6+ months operating history.
             </p>
+            <div className="flex items-center justify-center space-x-4 text-sm text-green-600">
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Live Business Data</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span>Real-time Qualification</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}

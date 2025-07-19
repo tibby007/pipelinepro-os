@@ -48,9 +48,10 @@ interface SearchResultsProps {
     radius: number;
   };
   onAddProspect: (business: HealthcareBusiness) => void;
+  dataSource?: string;
 }
 
-export function SearchResults({ businesses, searchCriteria, onAddProspect }: SearchResultsProps) {
+export function SearchResults({ businesses, searchCriteria, onAddProspect, dataSource }: SearchResultsProps) {
   const [addingProspects, setAddingProspects] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
@@ -113,8 +114,18 @@ export function SearchResults({ businesses, searchCriteria, onAddProspect }: Sea
                   <> matching <span className="font-semibold">{searchCriteria.businessType}</span></>
                 )}
               </div>
-              <div className="text-sm text-gray-500">
-                Search radius: {searchCriteria.radius} miles
+              <div className="flex items-center space-x-4 text-sm">
+                <div className="text-gray-500">
+                  Search radius: {searchCriteria.radius} miles
+                </div>
+                {dataSource && (
+                  <div className="flex items-center space-x-1">
+                    <div className={`w-2 h-2 rounded-full ${dataSource === 'apify' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                    <span className={`font-medium ${dataSource === 'apify' ? 'text-green-600' : 'text-yellow-600'}`}>
+                      {dataSource === 'apify' ? 'Live Data' : 'Sample Data'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

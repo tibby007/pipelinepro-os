@@ -45,7 +45,7 @@ export function SearchForm({ onSearch, isLoading = false }: SearchFormProps) {
           <span>Healthcare Business Research</span>
         </CardTitle>
         <CardDescription>
-          Search for healthcare businesses by location and type to find qualified prospects
+          Search for real healthcare businesses using Apify's web scraping technology to find qualified prospects
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -113,16 +113,16 @@ export function SearchForm({ onSearch, isLoading = false }: SearchFormProps) {
               <p className="font-medium">Targeting criteria:</p>
               <p>• $17K+ monthly revenue • 6+ months in business • US-based healthcare</p>
             </div>
-            <Button type="submit" disabled={isLoading || !location.trim()} className="min-w-[120px]">
+            <Button type="submit" disabled={isLoading || !location.trim()} className="min-w-[140px]">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Searching...
+                  Scraping Data...
                 </>
               ) : (
                 <>
                   <Search className="mr-2 h-4 w-4" />
-                  Search
+                  Search Live Data
                 </>
               )}
             </Button>
