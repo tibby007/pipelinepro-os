@@ -3,11 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { ApifyClient } from 'apify-client';
 import crypto from 'crypto';
+import { getCurrentUserEmail } from '@/lib/user-service';
 
 const prisma = new PrismaClient();
-
-// Default user email for single-user system
-const DEFAULT_USER_EMAIL = 'john@doe.com';
 
 // Encryption key for API keys (in production, use proper key management)
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-replace-in-production-32chars';
@@ -28,8 +26,9 @@ function decrypt(encryptedText: string): string {
 
 export async function GET(request: NextRequest) {
   try {
+    const userEmail = await getCurrentUserEmail();
     const user = await prisma.user.findUnique({
-      where: { email: DEFAULT_USER_EMAIL },
+      where: { email: userEmail },
       select: {
         apifyKeyStatus: true,
         apifyKeyLastTested: true,
@@ -73,8 +72,9 @@ export async function POST(request: NextRequest) {
     // Encrypt and store the API key
     const encryptedKey = encrypt(apiKey);
     
+    const userEmail = await getCurrentUserEmail();
     await prisma.user.update({
-      where: { email: DEFAULT_USER_EMAIL },
+      where: { email: userEmail },
       data: {
         apifyApiKey: encryptedKey,
         apifyKeyStatus: testResult.isValid ? 'VALID' : 'INVALID',
@@ -96,8 +96,9 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const userEmail = await getCurrentUserEmail();
     await prisma.user.update({
-      where: { email: DEFAULT_USER_EMAIL },
+      where: { email: userEmail },
       data: {
         apifyApiKey: null,
         apifyKeyStatus: 'NOT_CONFIGURED',

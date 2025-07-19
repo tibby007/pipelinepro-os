@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { searchHealthcareBusinesses, SearchCriteria } from '@/lib/apify-service';
+import { getCurrentUserEmail } from '@/lib/user-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,12 +29,12 @@ export async function GET(req: NextRequest) {
 
     console.log('API: Starting healthcare business search with criteria:', searchCriteria);
     
-    // Use default user email for single-user system - use the seeded test account
-    const defaultUserEmail = 'john@doe.com';
-    console.log('API: Using default user email:', defaultUserEmail);
+    // Get current user email dynamically
+    const userEmail = await getCurrentUserEmail();
+    console.log('API: Using user email:', userEmail);
 
     // Use Apify to search for real healthcare businesses with user-specific API key
-    const searchResults = await searchHealthcareBusinesses(searchCriteria, defaultUserEmail);
+    const searchResults = await searchHealthcareBusinesses(searchCriteria, userEmail);
 
     console.log(`API: Found ${searchResults.businesses.length} businesses using ${searchResults.dataSource} data`);
 

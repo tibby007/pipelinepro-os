@@ -51,6 +51,19 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Extended Profile Information
+  firstName     String?
+  lastName      String?
+  jobTitle      String?
+  company       String?
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  website       String?
+  profileSetupComplete Boolean @default(false)
+
   // API Configuration
   apifyApiKey   String?   // Encrypted Apify API key for user-specific data scraping
   apifyKeyLastTested DateTime? // Last time the API key was tested
