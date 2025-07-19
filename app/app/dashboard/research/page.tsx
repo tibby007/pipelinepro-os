@@ -1,0 +1,255 @@
+
+'use client';
+
+import { useState } from 'react';
+import { SearchForm, SearchCriteria } from '@/components/prospects/search-form';
+import { SearchResults } from '@/components/prospects/search-results';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Search,
+  Building2,
+  TrendingUp,
+  Users,
+  MapPin,
+  RefreshCw,
+} from 'lucide-react';
+
+interface HealthcareBusiness {
+  id: string;
+  name: string;
+  address: string;
+  phone?: string;
+  businessType: string;
+  estimatedRevenue: string;
+  yearsInBusiness: string;
+  employeeCount: string;
+  website?: string;
+  qualificationIndicators: {
+    revenueQualified: boolean;
+    experienceQualified: boolean;
+    locationQualified: boolean;
+    businessTypeQualified: boolean;
+  };
+  qualificationScore: number;
+  isQualified: boolean;
+}
+
+interface SearchResult {
+  businesses: HealthcareBusiness[];
+  searchCriteria: SearchCriteria;
+  totalResults: number;
+}
+
+export default function ResearchPage() {
+  const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<SearchCriteria[]>([]);
+  const { toast } = useToast();
+
+  const handleSearch = async (criteria: SearchCriteria) => {
+    setIsSearching(true);
+    try {
+      const params = new URLSearchParams({
+        location: criteria.location,
+        businessType: criteria.businessType,
+        radius: criteria.radius.toString(),
+      });
+
+      const response = await fetch(`/api/prospects/search?${params}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Search failed');
+      }
+
+      setSearchResults({
+        businesses: data.data.businesses,
+        searchCriteria: criteria,
+        totalResults: data.data.totalResults,
+      });
+
+      // Add to search history
+      setSearchHistory(prev => {
+        const newHistory = [criteria, ...prev.filter(h => 
+          h.location !== criteria.location || h.businessType !== criteria.businessType
+        )].slice(0, 5);
+        return newHistory;
+      });
+
+      toast({
+        title: 'Search completed',
+        description: `Found ${data.data.totalResults} healthcare businesses`,
+      });
+
+    } catch (error: any) {
+      toast({
+        title: 'Search failed',
+        description: error.message || 'Failed to search for businesses',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleAddProspect = async (business: HealthcareBusiness) => {
+    try {
+      // Parse the business data to match API expectations
+      const [city, stateZip] = business.address.split(', ');
+      const [state, zipCode] = stateZip?.split(' ') || ['', ''];
+      
+      // Extract revenue estimate (convert from range to single number)
+      const revenueMatch = business.estimatedRevenue.match(/\$(\d+)K/);
+      const monthlyRevenue = revenueMatch ? parseInt(revenueMatch[1]) * 1000 : null;
+      
+      // Extract years in business
+      const yearsMatch = business.yearsInBusiness.match(/(\d+\.?\d*)/);
+      const yearsInBusiness = yearsMatch ? parseFloat(yearsMatch[1]) : null;
+      
+      // Extract employee count (take the lower number from range)
+      const employeeMatch = business.employeeCount.match(/(\d+)/);
+      const employeeCount = employeeMatch ? parseInt(employeeMatch[1]) : null;
+
+      // Map business type to enum value
+      const businessTypeMap: Record<string, string> = {
+        'Medical Office': 'MEDICAL_OFFICE',
+        'Dental Practice': 'DENTAL_PRACTICE',
+        'Veterinary Clinic': 'VETERINARY_CLINIC',
+        'Physical Therapy': 'PHYSICAL_THERAPY',
+        'Mental Health': 'MENTAL_HEALTH',
+        'Urgent Care': 'URGENT_CARE',
+        'Medical Imaging': 'MEDICAL_IMAGING',
+        'Laboratory': 'LABORATORY',
+        'Pharmacy': 'PHARMACY',
+        'Specialty Clinic': 'SPECIALTY_CLINIC',
+      };
+
+      const payload = {
+        businessName: business.name,
+        contactName: null, // Will be filled in later during qualification
+        email: null,
+        phone: business.phone,
+        address: business.address,
+        city: city?.trim(),
+        state: state?.trim(),
+        zipCode: zipCode?.trim(),
+        businessType: businessTypeMap[business.businessType] || 'OTHER',
+        monthlyRevenue,
+        yearsInBusiness,
+        employeeCount,
+        website: business.website,
+        notes: `Added from research. Qualification score: ${business.qualificationScore}%`,
+        tags: ['research', 'new-prospect'],
+        source: 'Google Maps Research',
+      };
+
+      const response = await fetch('/api/prospects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add prospect');
+      }
+
+      return data.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to add prospect');
+    }
+  };
+
+  const handleSearchFromHistory = (criteria: SearchCriteria) => {
+    handleSearch(criteria);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Prospect Research</h1>
+          <p className="text-gray-600">
+            Find and qualify healthcare businesses for your pipeline
+          </p>
+        </div>
+        <div className="flex items-center space-x-3 text-sm text-gray-500">
+          <div className="flex items-center space-x-1">
+            <Building2 className="h-4 w-4" />
+            <span>Healthcare Focus</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <TrendingUp className="h-4 w-4" />
+            <span>$17K+ Revenue</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Users className="h-4 w-4" />
+            <span>6+ Months Experience</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Form */}
+      <SearchForm onSearch={handleSearch} isLoading={isSearching} />
+
+      {/* Search History */}
+      {searchHistory.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Recent Searches</CardTitle>
+            <CardDescription>Click to repeat a previous search</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {searchHistory.map((criteria, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSearchFromHistory(criteria)}
+                  disabled={isSearching}
+                  className="text-xs"
+                >
+                  <MapPin className="h-3 w-3 mr-1" />
+                  {criteria.location}
+                  {criteria.businessType !== 'all' && (
+                    <span className="ml-1">• {criteria.businessType}</span>
+                  )}
+                  <RefreshCw className="h-3 w-3 ml-1" />
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search Results or Empty State */}
+      {searchResults ? (
+        <SearchResults
+          businesses={searchResults.businesses}
+          searchCriteria={searchResults.searchCriteria}
+          onAddProspect={handleAddProspect}
+        />
+      ) : (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Start Your Healthcare Business Research
+            </h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+              Enter a location above to search for healthcare businesses that meet our qualification criteria.
+              Find prospects with $17K+ monthly revenue and 6+ months in business.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
