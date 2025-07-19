@@ -174,9 +174,9 @@ export default function ResearchPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Prospect Research</h1>
+          <h1 className="text-2xl font-bold text-gray-900">CCC Prospect Research</h1>
           <p className="text-gray-600">
-            Find and qualify healthcare businesses for your pipeline
+            Find and qualify healthcare businesses for CCC's lending pipeline
           </p>
         </div>
         <div className="flex items-center space-x-3 text-sm text-gray-500">
@@ -241,11 +241,11 @@ export default function ResearchPage() {
           <CardContent className="py-12 text-center">
             <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Start Your Healthcare Business Research
+              Start CCC Healthcare Lending Research
             </h3>
             <p className="text-gray-500 max-w-md mx-auto">
-              Enter a location above to search for healthcare businesses that meet our qualification criteria.
-              Find prospects with $17K+ monthly revenue and 6+ months in business.
+              Enter a location above to search for healthcare businesses that meet CCC's lending qualification criteria.
+              Find prospects with $17K+ monthly revenue and 6+ months operating history.
             </p>
           </CardContent>
         </Card>

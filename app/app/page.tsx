@@ -26,37 +26,37 @@ const features = [
   {
     icon: Search,
     title: 'Prospect Research',
-    description: 'Find and qualify healthcare businesses with location-based search and qualification indicators.',
+    description: 'CCC loan officers find qualified healthcare businesses with location-based search and lending criteria indicators.',
   },
   {
     icon: Database,
-    title: 'Prospect Management',
-    description: 'Complete database with status tracking, filtering, export functionality, and bulk actions.',
+    title: 'Prospect Database',
+    description: 'CCC internal database with lending status tracking, filtering, export functionality, and bulk operations.',
   },
   {
     icon: MessageSquare,
-    title: 'Multi-Channel Outreach',
-    description: 'Email templates, LinkedIn tracking, phone logs, and automated follow-up scheduling.',
+    title: 'Outreach Tracking',
+    description: 'Track loan officer activities: emails, calls, LinkedIn outreach, and follow-up scheduling.',
   },
   {
     icon: CheckSquare,
-    title: 'Qualification System',
-    description: 'Chat-style qualifier with auto-scoring and comprehensive qualification status management.',
+    title: 'Lending Qualification',
+    description: 'CCC qualification workflow with auto-scoring and comprehensive lending assessment management.',
   },
   {
     icon: FileText,
-    title: 'Document Collection',
-    description: 'Secure file upload system with document tracking and automated reminder system.',
+    title: 'Document Management',
+    description: 'Secure loan application document collection with tracking and automated reminder system.',
   },
   {
     icon: Send,
-    title: 'Submission Center',
-    description: 'Package applications and auto-email to Stella@arffinancial.com with status tracking.',
+    title: 'Partner Submissions',
+    description: 'Package loan applications and submit to CCC lending partners with status tracking.',
   },
   {
     icon: BarChart3,
-    title: 'Analytics Dashboard',
-    description: 'Conversion rates, performance metrics, time-in-stage tracking, and ROI calculations.',
+    title: 'CCC Analytics',
+    description: 'Loan officer performance, conversion rates, pipeline metrics, and lending ROI analysis.',
   },
 ];
 
@@ -64,22 +64,22 @@ const qualificationCriteria = [
   {
     icon: DollarSign,
     title: 'Minimum $17,000 Monthly Revenue',
-    description: 'Target businesses with strong financial performance',
+    description: 'CCC lending requirement for healthcare business financial strength',
   },
   {
     icon: Building2,
     title: '6+ Months in Business',
-    description: 'Established healthcare practices with proven stability',
+    description: 'CCC requirement for established healthcare practice stability',
   },
   {
     icon: MapPin,
     title: 'US-Based Location',
-    description: 'Focus on businesses located within the United States',
+    description: 'CCC lending geographic focus within the United States',
   },
   {
     icon: Users,
     title: 'Owners and Managers',
-    description: 'Direct access to decision-makers in healthcare businesses',
+    description: 'CCC requirement for direct access to healthcare business decision-makers',
   },
 ];
 
@@ -140,21 +140,21 @@ export default function HomePage() {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Healthcare Prospect Pipeline
+            CCC Lending Operations Dashboard
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Comprehensive web application for managing healthcare business prospects. 
-            Research, qualify, and convert prospects with our complete pipeline management system.
+            Internal operational system for Commercial Capital Connect's healthcare lending team. 
+            Manage prospect pipeline, track lending opportunities, and streamline our business development workflow.
           </p>
           <div className="space-x-4">
             <Button size="lg" asChild>
-              <Link href="/auth/signup">
-                Start Free Trial
+              <Link href="/auth/signin">
+                Access Internal System
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <Link href="/auth/signin">Sign In</Link>
+              <Link href="/auth/signup">Request Access</Link>
             </Button>
           </div>
         </div>
@@ -165,10 +165,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Target Qualification Criteria
+              CCC Lending Target Criteria
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Our system is specifically designed to target healthcare businesses that meet these essential criteria
+              Our internal system helps loan officers identify healthcare prospects that meet CCC's lending requirements
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -194,10 +194,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Complete Pipeline Management
+              CCC Operational Capabilities
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              From prospect research to final submission, manage every stage of your healthcare business pipeline
+              From prospect research to loan submission, our internal system supports every stage of CCC's healthcare lending operations
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -222,14 +222,14 @@ export default function HomePage() {
       <section className="py-20 bg-blue-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Transform Your Healthcare Prospect Pipeline?
+            CCC Loan Officers & Business Development Team
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join healthcare professionals who are already using our platform to manage and convert prospects efficiently.
+            Access our internal operational dashboard to efficiently manage healthcare lending prospects and streamline the loan origination process.
           </p>
           <Button size="lg" variant="secondary" asChild>
-            <Link href="/auth/signup">
-              Get Started Today
+            <Link href="/auth/signin">
+              Access Internal System
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
@@ -250,7 +250,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="text-sm text-gray-500">
-              © 2024 Commercial Capital Connect. Healthcare prospect management system.
+              © 2024 Commercial Capital Connect. Internal lending operations system.
             </div>
           </div>
         </div>

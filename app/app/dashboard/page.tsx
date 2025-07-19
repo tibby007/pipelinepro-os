@@ -55,28 +55,28 @@ const metrics = [
 const quickActions = [
   {
     title: 'Research Prospects',
-    description: 'Find new healthcare businesses to target',
+    description: 'Find healthcare businesses for CCC lending pipeline',
     icon: Search,
     href: '/dashboard/research',
     color: 'bg-blue-500',
   },
   {
     title: 'Add Prospect',
-    description: 'Manually add a new prospect to database',
+    description: 'Add new lending prospect to CCC database',
     icon: Database,
     href: '/dashboard/prospects/new',
     color: 'bg-green-500',
   },
   {
-    title: 'Send Outreach',
-    description: 'Create and send email or LinkedIn message',
+    title: 'Track Outreach',
+    description: 'Log loan officer outreach activities',
     icon: MessageSquare,
     href: '/dashboard/outreach/new',
     color: 'bg-purple-500',
   },
   {
-    title: 'View Analytics',
-    description: 'Check performance metrics and ROI',
+    title: 'View Metrics',
+    description: 'Check CCC lending pipeline performance',
     icon: BarChart3,
     href: '/dashboard/analytics',
     color: 'bg-orange-500',
@@ -121,7 +121,7 @@ export default function DashboardPage() {
           Welcome back, {session?.user?.name?.split(' ')[0] || 'there'}!
         </h1>
         <p className="text-blue-100 mb-4">
-          Manage your healthcare business prospects efficiently with our comprehensive pipeline system.
+          CCC's internal operational dashboard for managing healthcare lending prospects and loan origination workflow.
         </p>
         <div className="flex items-center space-x-4 text-sm">
           <div className="flex items-center space-x-1">
@@ -172,7 +172,7 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>
-                Common tasks to help you manage your prospect pipeline efficiently
+                Common loan officer tasks for CCC's healthcare lending pipeline management
               </CardDescription>
             </CardHeader>
             <CardContent>

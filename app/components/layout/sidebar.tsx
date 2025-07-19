@@ -25,43 +25,43 @@ const navigation = [
     name: 'Research',
     href: '/dashboard/research',
     icon: Search,
-    description: 'Find and qualify healthcare prospects',
+    description: 'Find healthcare lending prospects',
   },
   {
     name: 'Prospects',
     href: '/dashboard/prospects',
     icon: Database,
-    description: 'Manage prospect database',
+    description: 'Manage CCC prospect database',
   },
   {
     name: 'Outreach',
     href: '/dashboard/outreach',
     icon: MessageSquare,
-    description: 'Multi-channel communication',
+    description: 'Loan officer outreach tracking',
   },
   {
     name: 'Qualification',
     href: '/dashboard/qualification',
     icon: CheckSquare,
-    description: 'Qualify and score prospects',
+    description: 'Lending qualification workflow',
   },
   {
     name: 'Documents',
     href: '/dashboard/documents',
     icon: FileText,
-    description: 'Collect and manage documents',
+    description: 'Loan application documents',
   },
   {
     name: 'Submissions',
     href: '/dashboard/submissions',
     icon: Send,
-    description: 'Submit applications',
+    description: 'Submit to lending partners',
   },
   {
     name: 'Analytics',
     href: '/dashboard/analytics',
     icon: BarChart3,
-    description: 'Performance metrics and ROI',
+    description: 'CCC lending pipeline metrics',
   },
 ];
 
@@ -108,7 +108,7 @@ export function Sidebar({ userRole }: SidebarProps) {
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">CCC Pipeline</h1>
-                <p className="text-xs text-gray-500">Healthcare Prospects</p>
+                <p className="text-xs text-gray-500">Lending Operations</p>
               </div>
             </div>
           )}
@@ -164,10 +164,10 @@ export function Sidebar({ userRole }: SidebarProps) {
           <div className="p-4 border-t border-gray-200">
             <div className="bg-blue-50 p-3 rounded-lg">
               <div className="text-sm font-medium text-blue-900">
-                Healthcare Focus
+                CCC Lending Criteria
               </div>
               <div className="text-xs text-blue-700 mt-1">
-                Targeting $17K+ monthly revenue businesses with 6+ months operation
+                Healthcare businesses: $17K+ monthly revenue, 6+ months operating
               </div>
             </div>
           </div>

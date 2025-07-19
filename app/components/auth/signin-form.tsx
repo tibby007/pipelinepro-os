@@ -63,9 +63,9 @@ export function SignInForm() {
             <LogIn className="h-6 w-6 text-white" />
           </div>
         </div>
-        <CardTitle className="text-2xl text-center">Sign in to CCC Pipeline</CardTitle>
+        <CardTitle className="text-2xl text-center">CCC Internal System Access</CardTitle>
         <CardDescription className="text-center">
-          Enter your credentials to access your healthcare prospect pipeline
+          Enter your credentials to access CCC's lending operations dashboard
         </CardDescription>
       </CardHeader>
       <CardContent>

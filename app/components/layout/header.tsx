@@ -35,7 +35,7 @@ export function Header() {
             Welcome back, {session?.user?.name?.split(' ')[0] || 'there'}
           </h2>
           <p className="text-sm text-gray-500">
-            Manage your healthcare business prospects efficiently
+            CCC lending operations dashboard - healthcare prospect pipeline
           </p>
         </div>
 
