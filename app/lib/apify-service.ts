@@ -242,8 +242,24 @@ const displayNameToType: Record<string, { type: string; category: string }> = {
   'Other': { type: 'OTHER', category: 'BUSINESS_SERVICES' }
 };
 
-function categorizeBusinessType(categories: string[] = [], title: string = ''): { type: string; category: string } {
+function categorizeBusinessType(categories: string[] = [], title: string = ''): { type: string; category: string } | null {
   const searchText = `${categories.join(' ')} ${title}`.toLowerCase();
+  
+  // First, check for obvious non-food businesses that should be excluded
+  const excludePatterns = [
+    'telecom', 'telecommunications', 'verizon', 'at&t', 'sprint', 'internet', 'phone service',
+    'web design', 'web development', 'web llc', 'website', 'digital marketing', 'seo',
+    'insurance', 'financial', 'bank', 'credit', 'loan', 'mortgage',
+    'construction', 'plumbing', 'electrical', 'hvac', 'roofing',
+    'medical equipment', 'supplies', 'wholesale', 'distribution',
+    'government', 'municipal', 'city hall', 'courthouse', 'post office'
+  ];
+  
+  for (const pattern of excludePatterns) {
+    if (searchText.includes(pattern)) {
+      return null; // Exclude this business entirely
+    }
+  }
   
   // Healthcare
   if (searchText.includes('dental') || searchText.includes('dentist') || searchText.includes('orthodont')) {
@@ -271,30 +287,48 @@ function categorizeBusinessType(categories: string[] = [], title: string = ''): 
     return { type: 'Optometry', category: 'HEALTHCARE' };
   }
   
-  // Restaurants & Food Service
-  if (searchText.includes('restaurant') || searchText.includes('dining') || searchText.includes('bistro') || searchText.includes('grill')) {
-    if (searchText.includes('fast') || searchText.includes('quick')) {
+  // Restaurants & Food Service - Enhanced detection
+  const restaurantKeywords = [
+    'restaurant', 'dining', 'bistro', 'grill', 'eatery', 'diner', 'steakhouse',
+    'coffee', 'cafe', 'espresso', 'coffeehouse',
+    'bakery', 'pastry', 'bread', 'donut', 'bagel',
+    'pizza', 'pizzeria',
+    'bar', 'pub', 'tavern', 'brewery', 'sports bar',
+    'catering', 'food service',
+    'sandwich', 'deli', 'sub', 'hoagie',
+    'burger', 'bbq', 'barbecue', 'wings', 'chicken',
+    'taco', 'mexican', 'chinese', 'indian', 'thai', 'sushi', 'japanese',
+    'food truck', 'ice cream', 'frozen yogurt',
+    'buffet', 'brunch', 'breakfast', 'lunch', 'dinner'
+  ];
+  
+  const hasRestaurantKeyword = restaurantKeywords.some(keyword => searchText.includes(keyword));
+  
+  if (hasRestaurantKeyword) {
+    // More specific restaurant categorization
+    if (searchText.includes('coffee') || searchText.includes('cafe') || searchText.includes('espresso')) {
+      return { type: 'Coffee Shop', category: 'RESTAURANT_FOOD_SERVICE' };
+    }
+    if (searchText.includes('bakery') || searchText.includes('pastry') || searchText.includes('bread') || searchText.includes('donut')) {
+      return { type: 'Bakery', category: 'RESTAURANT_FOOD_SERVICE' };
+    }
+    if (searchText.includes('pizza')) {
+      return { type: 'Pizza Restaurant', category: 'RESTAURANT_FOOD_SERVICE' };
+    }
+    if (searchText.includes('bar') || searchText.includes('pub') || searchText.includes('tavern') || searchText.includes('brewery')) {
+      return { type: 'Bar & Grill', category: 'RESTAURANT_FOOD_SERVICE' };
+    }
+    if (searchText.includes('catering')) {
+      return { type: 'Catering', category: 'RESTAURANT_FOOD_SERVICE' };
+    }
+    if (searchText.includes('fast') || searchText.includes('quick') || searchText.includes('burger') || searchText.includes('drive')) {
       return { type: 'Fast Food', category: 'RESTAURANT_FOOD_SERVICE' };
     }
-    if (searchText.includes('fine') || searchText.includes('upscale')) {
+    if (searchText.includes('fine') || searchText.includes('upscale') || searchText.includes('steakhouse')) {
       return { type: 'Fine Dining', category: 'RESTAURANT_FOOD_SERVICE' };
     }
+    // Default to casual dining for other restaurants
     return { type: 'Casual Dining', category: 'RESTAURANT_FOOD_SERVICE' };
-  }
-  if (searchText.includes('coffee') || searchText.includes('cafe') || searchText.includes('espresso')) {
-    return { type: 'Coffee Shop', category: 'RESTAURANT_FOOD_SERVICE' };
-  }
-  if (searchText.includes('bakery') || searchText.includes('pastry') || searchText.includes('bread')) {
-    return { type: 'Bakery', category: 'RESTAURANT_FOOD_SERVICE' };
-  }
-  if (searchText.includes('pizza')) {
-    return { type: 'Pizza Restaurant', category: 'RESTAURANT_FOOD_SERVICE' };
-  }
-  if (searchText.includes('bar') || searchText.includes('pub') || searchText.includes('tavern')) {
-    return { type: 'Bar & Grill', category: 'RESTAURANT_FOOD_SERVICE' };
-  }
-  if (searchText.includes('catering')) {
-    return { type: 'Catering', category: 'RESTAURANT_FOOD_SERVICE' };
   }
   
   // Beauty & Wellness
@@ -364,8 +398,9 @@ function categorizeBusinessType(categories: string[] = [], title: string = ''): 
     return { type: 'Real Estate', category: 'BUSINESS_SERVICES' };
   }
   
-  // Default fallback
-  return { type: 'Other', category: 'BUSINESS_SERVICES' };
+  // For unrecognized businesses, return null to exclude them
+  // This prevents random businesses from being included in industry-specific searches
+  return null;
 }
 
 function estimateRevenue(reviewsCount: number = 0, rating: number = 0): string {
@@ -423,7 +458,7 @@ function calculateQualificationScore(business: ApifyBusiness, businessType: stri
 }
 
 function buildSearchQuery(criteria: SearchCriteria): string {
-  const { location, industryTypes } = criteria;
+  const { location, industryTypes, industryCategory } = criteria;
   
   // If no specific industry types, search broadly
   if (industryTypes.length === 0) {
@@ -435,7 +470,26 @@ function buildSearchQuery(criteria: SearchCriteria): string {
     return `business services near ${location}`;
   }
   
-  // Use specific terms for the selected industries
+  // For restaurant searches, be very specific with multiple restaurant-focused terms
+  if (industryCategory === 'RESTAURANT_FOOD_SERVICE') {
+    const restaurantTerms: string[] = [];
+    for (const industryType of industryTypes.slice(0, 3)) {
+      const terms = businessTypeMapping[industryType];
+      if (terms && terms.length > 0) {
+        // Use all terms for restaurants to be more specific
+        restaurantTerms.push(...terms.slice(0, 2)); // Use first 2 terms per type
+      }
+    }
+    
+    // Add general restaurant terms to ensure we get restaurants
+    restaurantTerms.push('restaurant', 'food', 'dining', 'cafe', 'eatery');
+    
+    // Remove duplicates and create specific query
+    const uniqueTerms = [...new Set(restaurantTerms)];
+    return `(${uniqueTerms.slice(0, 8).join(' OR ')}) near ${location}`;
+  }
+  
+  // Use specific terms for other industries  
   const searchTerms: string[] = [];
   for (const industryType of industryTypes.slice(0, 3)) { // Limit to first 3 for query length
     const terms = businessTypeMapping[industryType];
@@ -546,10 +600,10 @@ export async function searchBusinesses(
       };
     }
 
-    // Transform Apify results to our format
+    // Transform Apify results to our format with improved filtering
     const businesses: Business[] = items
       .filter((item: any) => item && item.title && item.address)
-      .map((item: any, index: number): Business => {
+      .map((item: any, index: number): Business | null => {
         const apifyBusiness: ApifyBusiness = {
           title: item.title || '',
           address: item.address || '',
@@ -570,6 +624,20 @@ export async function searchBusinesses(
           item.title
         );
         
+        // If business classification returns null, exclude this business
+        if (!businessClassification) {
+          console.log(`Excluding business: ${item.title} - doesn't match industry criteria`);
+          return null;
+        }
+
+        // Additional filter: if searching for specific industry category, ensure it matches
+        if (criteria.industryCategory && criteria.industryCategory !== 'all') {
+          if (businessClassification.category !== criteria.industryCategory) {
+            console.log(`Excluding business: ${item.title} - category mismatch (${businessClassification.category} vs ${criteria.industryCategory})`);
+            return null;
+          }
+        }
+        
         const qualification = calculateQualificationScore(apifyBusiness, businessClassification.type);
         
         return {
@@ -587,7 +655,8 @@ export async function searchBusinesses(
           qualificationScore: qualification.score,
           isQualified: qualification.isQualified,
         };
-      });
+      })
+      .filter((business): business is Business => business !== null); // Remove null businesses
 
     console.log(`Transformed ${businesses.length} businesses`);
 
@@ -596,7 +665,7 @@ export async function searchBusinesses(
       totalResults: businesses.length,
       searchCriteria: criteria,
       dataSource: 'live',
-      message: message || `Found ${businesses.length} healthcare businesses using live data`,
+      message: message || `Found ${businesses.length} ${criteria.industryCategory ? criteria.industryCategory.toLowerCase().replace('_', ' ') : ''} businesses using live data`,
     };
 
   } catch (error) {
@@ -745,7 +814,24 @@ function getMockBusinesses(criteria: SearchCriteria): Business[] {
     }
   ];
 
-  // Filter by industry types if specified
+  // Filter by industry category if specified
+  if (criteria.industryCategory && criteria.industryCategory !== 'all') {
+    const filteredByCategory = mockBusinesses.filter(business => 
+      business.industryCategory === criteria.industryCategory
+    );
+    
+    // Further filter by specific industry types if provided
+    if (criteria.industryTypes && criteria.industryTypes.length > 0) {
+      return filteredByCategory.filter(business => {
+        const businessInfo = displayNameToType[business.businessType];
+        return businessInfo && criteria.industryTypes.includes(businessInfo.type);
+      });
+    }
+    
+    return filteredByCategory;
+  }
+
+  // Filter by industry types if specified but no category
   if (criteria.industryTypes && criteria.industryTypes.length > 0) {
     return mockBusinesses.filter(business => {
       const businessInfo = displayNameToType[business.businessType];
