@@ -2,6 +2,7 @@
 import { ApifyClient } from 'apify-client';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import { IndustryCategory, IndustryType } from './types';
 
 const prisma = new PrismaClient();
 
@@ -91,315 +92,368 @@ export interface Business {
   isQualified: boolean;
 }
 
-// Map search business types to Google Maps search terms
-const businessTypeMapping: Record<string, string[]> = {
-  // Healthcare
-  'MEDICAL_OFFICE': ['medical office', 'family practice', 'primary care', 'general practitioner'],
-  'DENTAL_PRACTICE': ['dental office', 'dentist', 'dental clinic', 'orthodontist'],
-  'VETERINARY_CLINIC': ['veterinary clinic', 'animal hospital', 'vet clinic', 'veterinarian'],
-  'PHYSICAL_THERAPY': ['physical therapy', 'physiotherapy', 'rehabilitation center'],
-  'MENTAL_HEALTH': ['mental health clinic', 'psychiatrist', 'psychologist', 'counseling center'],
-  'URGENT_CARE': ['urgent care', 'walk-in clinic', 'immediate care'],
-  'MEDICAL_IMAGING': ['medical imaging', 'radiology center', 'MRI center', 'X-ray clinic'],
-  'LABORATORY': ['medical laboratory', 'lab services', 'diagnostic lab'],
-  'PHARMACY': ['pharmacy', 'drugstore', 'medical pharmacy'],
-  'SPECIALTY_CLINIC': ['specialty clinic', 'specialist', 'medical specialist'],
-  'CHIROPRACTIC': ['chiropractor', 'chiropractic clinic', 'spinal adjustment'],
-  'OPTOMETRY': ['optometrist', 'eye doctor', 'vision center', 'optical shop'],
-  'DERMATOLOGY': ['dermatologist', 'skin clinic', 'dermatology office'],
+// COMPLETELY REWRITTEN: Industry-specific search keyword mapping
+// Each industry category has precisely targeted keywords to prevent cross-contamination
+const INDUSTRY_SEARCH_KEYWORDS: Record<IndustryCategory, string[]> = {
+  HEALTHCARE: [
+    'medical office', 'doctor office', 'physician', 'medical center', 'clinic',
+    'dental office', 'dentist', 'orthodontist', 'oral surgeon',
+    'veterinary', 'animal hospital', 'vet clinic', 'pet clinic',
+    'physical therapy', 'physiotherapy', 'rehabilitation center',
+    'mental health', 'psychiatrist', 'psychologist', 'counseling',
+    'urgent care', 'walk-in clinic', 'immediate care',
+    'pharmacy', 'drugstore', 'medical pharmacy',
+    'chiropractor', 'chiropractic', 'spinal care',
+    'optometrist', 'eye doctor', 'vision center'
+  ],
   
-  // Restaurants & Food Service
-  'FAST_FOOD': ['fast food', 'quick service restaurant', 'burger', 'pizza', 'sandwich shop'],
-  'CASUAL_DINING': ['restaurant', 'casual dining', 'family restaurant', 'bistro', 'grill'],
-  'FINE_DINING': ['fine dining', 'upscale restaurant', 'steakhouse', 'fine restaurant'],
-  'COFFEE_SHOP': ['coffee shop', 'cafe', 'coffee house', 'espresso bar'],
-  'BAKERY': ['bakery', 'bakehouse', 'pastry shop', 'bread shop'],
-  'FOOD_TRUCK': ['food truck', 'mobile food', 'street food'],
-  'CATERING': ['catering', 'catering service', 'event catering'],
-  'BAR_GRILL': ['bar and grill', 'sports bar', 'pub', 'tavern'],
-  'PIZZA_RESTAURANT': ['pizza', 'pizzeria', 'pizza restaurant'],
-  'ETHNIC_CUISINE': ['ethnic restaurant', 'mexican restaurant', 'chinese restaurant', 'italian restaurant'],
+  RESTAURANT_FOOD_SERVICE: [
+    'restaurant', 'dining', 'eatery', 'bistro', 'grill', 'steakhouse',
+    'fast food', 'quick service', 'burger joint', 'drive thru',
+    'pizza restaurant', 'pizzeria', 'pizza place',
+    'coffee shop', 'cafe', 'espresso bar', 'coffee house',
+    'bakery', 'pastry shop', 'donut shop', 'bagel shop',
+    'bar and grill', 'sports bar', 'pub', 'tavern',
+    'catering service', 'food catering', 'event catering',
+    'food truck', 'mobile food', 'street food'
+  ],
   
-  // Beauty & Wellness
-  'HAIR_SALON': ['hair salon', 'beauty salon', 'hairstylist', 'hair studio'],
-  'NAIL_SALON': ['nail salon', 'nail spa', 'manicure', 'pedicure'],
-  'SPA_WELLNESS': ['spa', 'wellness center', 'day spa', 'wellness spa'],
-  'MASSAGE_THERAPY': ['massage therapy', 'massage therapist', 'therapeutic massage'],
-  'TATTOO_PARLOR': ['tattoo parlor', 'tattoo shop', 'tattoo artist'],
-  'BARBERSHOP': ['barbershop', 'barber', 'mens grooming'],
-  'BEAUTY_SUPPLY': ['beauty supply', 'cosmetics store', 'beauty products'],
-  'COSMETIC_SERVICES': ['cosmetic services', 'makeup artist', 'esthetician'],
-  'TANNING_SALON': ['tanning salon', 'tanning studio', 'sun tanning'],
+  BEAUTY_WELLNESS: [
+    'hair salon', 'beauty salon', 'hair studio', 'hairstylist',
+    'nail salon', 'nail spa', 'manicure', 'pedicure',
+    'day spa', 'wellness spa', 'spa services', 'wellness center',
+    'massage therapy', 'therapeutic massage', 'massage studio',
+    'barbershop', 'barber', 'mens grooming',
+    'tattoo parlor', 'tattoo shop', 'tattoo studio',
+    'beauty supply', 'cosmetics store', 'beauty products'
+  ],
   
-  // Automotive Services
-  'AUTO_REPAIR': ['auto repair', 'car repair', 'automotive service', 'mechanic', 'garage'],
-  'OIL_CHANGE': ['oil change', 'quick lube', 'automotive maintenance'],
-  'TIRE_SHOP': ['tire shop', 'tire service', 'tire store'],
-  'CAR_WASH': ['car wash', 'auto wash', 'vehicle cleaning'],
-  'AUTO_DETAILING': ['auto detailing', 'car detailing', 'vehicle detailing'],
-  'TRANSMISSION_REPAIR': ['transmission repair', 'transmission service'],
-  'BODY_SHOP': ['auto body shop', 'collision repair', 'body work'],
-  'MUFFLER_SHOP': ['muffler shop', 'exhaust service', 'muffler repair'],
-  'BRAKE_SERVICE': ['brake service', 'brake repair', 'brake shop'],
+  AUTOMOTIVE_SERVICES: [
+    'auto repair', 'car repair', 'automotive service', 'mechanic', 'garage',
+    'oil change', 'quick lube', 'automotive maintenance',
+    'tire shop', 'tire service', 'tire store', 'tire center',
+    'car wash', 'auto wash', 'vehicle cleaning',
+    'auto detailing', 'car detailing', 'vehicle detailing',
+    'transmission repair', 'transmission service',
+    'auto body shop', 'collision repair', 'body work',
+    'muffler shop', 'exhaust service', 'muffler repair',
+    'brake service', 'brake repair', 'brake shop'
+  ],
   
-  // Fitness & Recreation
-  'GYM_FITNESS': ['gym', 'fitness center', 'health club', 'workout facility'],
-  'YOGA_STUDIO': ['yoga studio', 'yoga class', 'yoga center'],
-  'MARTIAL_ARTS': ['martial arts', 'karate', 'taekwondo', 'jiu jitsu'],
-  'DANCE_STUDIO': ['dance studio', 'dance school', 'dance lessons'],
-  'PERSONAL_TRAINING': ['personal trainer', 'fitness trainer', 'personal training'],
-  'SPORTS_FACILITY': ['sports facility', 'athletic facility', 'sports center'],
-  'RECREATION_CENTER': ['recreation center', 'community center', 'rec center'],
-  'CLIMBING_GYM': ['climbing gym', 'rock climbing', 'bouldering'],
+  FITNESS_RECREATION: [
+    'gym', 'fitness center', 'health club', 'workout facility',
+    'yoga studio', 'yoga center', 'yoga classes',
+    'martial arts', 'karate', 'taekwondo', 'jiu jitsu',
+    'dance studio', 'dance school', 'dance classes',
+    'personal training', 'fitness training',
+    'sports facility', 'athletic facility', 'recreation center'
+  ],
   
-  // Pet Services
-  'VETERINARY_SERVICES': ['veterinarian', 'animal hospital', 'vet clinic', 'pet clinic'],
-  'PET_GROOMING': ['pet grooming', 'dog grooming', 'pet salon'],
-  'PET_BOARDING': ['pet boarding', 'dog boarding', 'pet hotel'],
-  'PET_TRAINING': ['pet training', 'dog training', 'obedience training'],
-  'PET_DAYCARE': ['pet daycare', 'dog daycare', 'pet care'],
-  'PET_STORE': ['pet store', 'pet shop', 'pet supplies'],
-  'DOG_WALKING': ['dog walking', 'pet sitting', 'dog walker'],
+  PET_SERVICES: [
+    'pet grooming', 'dog grooming', 'pet salon', 'grooming salon',
+    'pet boarding', 'dog boarding', 'pet hotel', 'pet daycare',
+    'pet training', 'dog training', 'obedience training',
+    'pet store', 'pet shop', 'pet supplies', 'animal supplies',
+    'dog walking', 'pet sitting', 'pet care services'
+  ],
   
-  // Specialty Retail
-  'BOUTIQUE_CLOTHING': ['boutique', 'clothing store', 'fashion boutique', 'apparel'],
-  'JEWELRY_STORE': ['jewelry store', 'jeweler', 'jewelry shop'],
-  'ELECTRONICS_REPAIR': ['electronics repair', 'computer repair', 'phone repair'],
-  'BIKE_SHOP': ['bike shop', 'bicycle store', 'cycle shop'],
-  'BOOKSTORE': ['bookstore', 'book shop', 'books'],
-  'GIFT_SHOP': ['gift shop', 'gift store', 'novelty store'],
-  'SPORTING_GOODS': ['sporting goods', 'sports store', 'athletic equipment'],
-  'HOME_DECOR': ['home decor', 'furniture store', 'interior design'],
-  'ANTIQUE_SHOP': ['antique shop', 'antiques', 'vintage store'],
+  SPECIALTY_RETAIL: [
+    'boutique', 'clothing store', 'fashion boutique', 'apparel store',
+    'jewelry store', 'jeweler', 'jewelry shop',
+    'electronics repair', 'computer repair', 'phone repair',
+    'bike shop', 'bicycle store', 'cycle shop',
+    'bookstore', 'book shop', 'books and more',
+    'gift shop', 'gift store', 'novelty store'
+  ],
   
-  // Business Services
-  'ACCOUNTING_SERVICES': ['accounting', 'accountant', 'bookkeeping', 'CPA', 'tax services'],
-  'LEGAL_SERVICES': ['lawyer', 'attorney', 'law firm', 'legal services'],
-  'MARKETING_AGENCY': ['marketing agency', 'advertising agency', 'digital marketing'],
-  'CONSULTING': ['consulting', 'business consultant', 'management consulting'],
-  'REAL_ESTATE': ['real estate', 'realtor', 'real estate agent', 'property management'],
-  'INSURANCE_AGENCY': ['insurance', 'insurance agent', 'insurance agency'],
-  'FINANCIAL_PLANNING': ['financial planner', 'financial advisor', 'investment advisor'],
-  'IT_SERVICES': ['IT services', 'computer services', 'technology services'],
-  'CLEANING_SERVICES': ['cleaning service', 'janitorial', 'commercial cleaning'],
-  'LANDSCAPING': ['landscaping', 'lawn care', 'gardening service'],
-  
-  'all': ['business', 'service', 'store', 'shop', 'center', 'office']
+  BUSINESS_SERVICES: [
+    'accounting firm', 'accountant', 'bookkeeping', 'CPA', 'tax services',
+    'law firm', 'attorney', 'lawyer', 'legal services',
+    'marketing agency', 'advertising agency', 'digital marketing',
+    'consulting firm', 'business consultant', 'management consulting',
+    'real estate office', 'realtor', 'real estate agent',
+    'insurance agency', 'insurance agent', 'insurance office'
+  ]
 };
 
-// Map display names back to our enum values and determine industry categories
-const displayNameToType: Record<string, { type: string; category: string }> = {
-  // Healthcare
-  'Medical Office': { type: 'MEDICAL_OFFICE', category: 'HEALTHCARE' },
-  'Dental Practice': { type: 'DENTAL_PRACTICE', category: 'HEALTHCARE' },
-  'Veterinary Clinic': { type: 'VETERINARY_CLINIC', category: 'HEALTHCARE' },
-  'Physical Therapy': { type: 'PHYSICAL_THERAPY', category: 'HEALTHCARE' },
-  'Mental Health': { type: 'MENTAL_HEALTH', category: 'HEALTHCARE' },
-  'Urgent Care': { type: 'URGENT_CARE', category: 'HEALTHCARE' },
-  'Medical Imaging': { type: 'MEDICAL_IMAGING', category: 'HEALTHCARE' },
-  'Laboratory': { type: 'LABORATORY', category: 'HEALTHCARE' },
-  'Pharmacy': { type: 'PHARMACY', category: 'HEALTHCARE' },
-  'Specialty Clinic': { type: 'SPECIALTY_CLINIC', category: 'HEALTHCARE' },
-  'Chiropractic': { type: 'CHIROPRACTIC', category: 'HEALTHCARE' },
-  'Optometry': { type: 'OPTOMETRY', category: 'HEALTHCARE' },
-  'Dermatology': { type: 'DERMATOLOGY', category: 'HEALTHCARE' },
+// STRICT BUSINESS TYPE VALIDATION: Only returns exact matches for industry categories
+function strictBusinessCategorization(title: string, categories: string[] = [], requestedCategory: IndustryCategory): {
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
+  displayName: string;
+} | null {
   
-  // Restaurants & Food Service
-  'Fast Food': { type: 'FAST_FOOD', category: 'RESTAURANT_FOOD_SERVICE' },
-  'Casual Dining': { type: 'CASUAL_DINING', category: 'RESTAURANT_FOOD_SERVICE' },
-  'Fine Dining': { type: 'FINE_DINING', category: 'RESTAURANT_FOOD_SERVICE' },
-  'Coffee Shop': { type: 'COFFEE_SHOP', category: 'RESTAURANT_FOOD_SERVICE' },
-  'Bakery': { type: 'BAKERY', category: 'RESTAURANT_FOOD_SERVICE' },
-  'Food Truck': { type: 'FOOD_TRUCK', category: 'RESTAURANT_FOOD_SERVICE' },
-  'Catering': { type: 'CATERING', category: 'RESTAURANT_FOOD_SERVICE' },
-  'Bar & Grill': { type: 'BAR_GRILL', category: 'RESTAURANT_FOOD_SERVICE' },
-  'Pizza Restaurant': { type: 'PIZZA_RESTAURANT', category: 'RESTAURANT_FOOD_SERVICE' },
-  'Ethnic Cuisine': { type: 'ETHNIC_CUISINE', category: 'RESTAURANT_FOOD_SERVICE' },
+  const searchText = `${title} ${categories.join(' ')}`.toLowerCase();
   
-  // Beauty & Wellness
-  'Hair Salon': { type: 'HAIR_SALON', category: 'BEAUTY_WELLNESS' },
-  'Nail Salon': { type: 'NAIL_SALON', category: 'BEAUTY_WELLNESS' },
-  'Spa & Wellness': { type: 'SPA_WELLNESS', category: 'BEAUTY_WELLNESS' },
-  'Massage Therapy': { type: 'MASSAGE_THERAPY', category: 'BEAUTY_WELLNESS' },
-  'Tattoo Parlor': { type: 'TATTOO_PARLOR', category: 'BEAUTY_WELLNESS' },
-  'Barbershop': { type: 'BARBERSHOP', category: 'BEAUTY_WELLNESS' },
-  'Beauty Supply': { type: 'BEAUTY_SUPPLY', category: 'BEAUTY_WELLNESS' },
-  'Cosmetic Services': { type: 'COSMETIC_SERVICES', category: 'BEAUTY_WELLNESS' },
-  'Tanning Salon': { type: 'TANNING_SALON', category: 'BEAUTY_WELLNESS' },
+  // CRITICAL: First apply universal exclusion filters
+  const globalExclusions = [
+    // Technology/Web Services
+    'web design', 'web development', 'website', 'digital agency', 'seo', 'software',
+    // Telecommunications  
+    'verizon', 'at&t', 'sprint', 'tmobile', 'phone service', 'internet provider',
+    // Financial (when not searching for business services)
+    'bank', 'credit union', 'mortgage', 'loan company',
+    // Construction/Trades
+    'construction', 'plumbing', 'electrical', 'hvac', 'roofing', 'landscaping',
+    // Government/Municipal
+    'government', 'municipal', 'city hall', 'courthouse', 'post office', 'dmv',
+    // Medical Equipment/Supplies (not healthcare providers)
+    'medical equipment', 'medical supplies', 'pharmaceutical distributor',
+    // Wholesale/Distribution
+    'wholesale', 'distributor', 'warehouse', 'logistics'
+  ];
   
-  // Automotive Services
-  'Auto Repair': { type: 'AUTO_REPAIR', category: 'AUTOMOTIVE_SERVICES' },
-  'Oil Change': { type: 'OIL_CHANGE', category: 'AUTOMOTIVE_SERVICES' },
-  'Tire Shop': { type: 'TIRE_SHOP', category: 'AUTOMOTIVE_SERVICES' },
-  'Car Wash': { type: 'CAR_WASH', category: 'AUTOMOTIVE_SERVICES' },
-  'Auto Detailing': { type: 'AUTO_DETAILING', category: 'AUTOMOTIVE_SERVICES' },
-  'Transmission Repair': { type: 'TRANSMISSION_REPAIR', category: 'AUTOMOTIVE_SERVICES' },
-  'Body Shop': { type: 'BODY_SHOP', category: 'AUTOMOTIVE_SERVICES' },
-  'Muffler Shop': { type: 'MUFFLER_SHOP', category: 'AUTOMOTIVE_SERVICES' },
-  'Brake Service': { type: 'BRAKE_SERVICE', category: 'AUTOMOTIVE_SERVICES' },
+  // Exclude businesses that match global exclusion patterns
+  for (const exclusion of globalExclusions) {
+    if (searchText.includes(exclusion)) {
+      return null;
+    }
+  }
   
-  // Add more categories as needed - keeping this shorter for now
-  'Other': { type: 'OTHER', category: 'BUSINESS_SERVICES' }
-};
+  // CATEGORY-SPECIFIC STRICT VALIDATION
+  switch (requestedCategory) {
+    case 'AUTOMOTIVE_SERVICES':
+      return validateAutomotiveBusiness(searchText);
+    case 'RESTAURANT_FOOD_SERVICE':
+      return validateRestaurantBusiness(searchText);
+    case 'HEALTHCARE':
+      return validateHealthcareBusiness(searchText);
+    case 'BEAUTY_WELLNESS':
+      return validateBeautyBusiness(searchText);
+    case 'FITNESS_RECREATION':
+      return validateFitnessBusiness(searchText);
+    case 'PET_SERVICES':
+      return validatePetServicesBusiness(searchText);
+    case 'SPECIALTY_RETAIL':
+      return validateRetailBusiness(searchText);
+    case 'BUSINESS_SERVICES':
+      return validateBusinessServicesBusiness(searchText);
+    default:
+      return null;
+  }
+}
 
-function categorizeBusinessType(categories: string[] = [], title: string = ''): { type: string; category: string } | null {
-  const searchText = `${categories.join(' ')} ${title}`.toLowerCase();
+// AUTOMOTIVE SERVICES VALIDATION - ULTRA STRICT
+function validateAutomotiveBusiness(searchText: string): {
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
+  displayName: string;
+} | null {
   
-  // First, check for obvious non-food businesses that should be excluded
-  const excludePatterns = [
-    'telecom', 'telecommunications', 'verizon', 'at&t', 'sprint', 'internet', 'phone service',
-    'web design', 'web development', 'web llc', 'website', 'digital marketing', 'seo',
-    'insurance', 'financial', 'bank', 'credit', 'loan', 'mortgage',
-    'construction', 'plumbing', 'electrical', 'hvac', 'roofing',
-    'medical equipment', 'supplies', 'wholesale', 'distribution',
-    'government', 'municipal', 'city hall', 'courthouse', 'post office'
+  // MANDATORY automotive keywords - business MUST contain these
+  const mandatoryAutomotiveKeywords = [
+    'auto', 'car', 'vehicle', 'automotive', 'tire', 'brake', 'oil change',
+    'mechanic', 'garage', 'transmission', 'muffler', 'body shop'
   ];
   
-  for (const pattern of excludePatterns) {
-    if (searchText.includes(pattern)) {
-      return null; // Exclude this business entirely
-    }
+  const hasMandatoryKeyword = mandatoryAutomotiveKeywords.some(keyword => 
+    searchText.includes(keyword)
+  );
+  
+  if (!hasMandatoryKeyword) {
+    return null; // REJECT: No automotive keywords found
   }
   
-  // Healthcare
-  if (searchText.includes('dental') || searchText.includes('dentist') || searchText.includes('orthodont')) {
-    return { type: 'Dental Practice', category: 'HEALTHCARE' };
-  }
-  if (searchText.includes('veterinary') || searchText.includes('animal') || searchText.includes('vet ')) {
-    return { type: 'Veterinary Clinic', category: 'HEALTHCARE' };
-  }
-  if (searchText.includes('physical therapy') || searchText.includes('physiotherapy') || searchText.includes('rehabilitation')) {
-    return { type: 'Physical Therapy', category: 'HEALTHCARE' };
-  }
-  if (searchText.includes('mental health') || searchText.includes('psychiatr') || searchText.includes('psychol') || searchText.includes('counseling')) {
-    return { type: 'Mental Health', category: 'HEALTHCARE' };
-  }
-  if (searchText.includes('urgent care') || searchText.includes('walk-in')) {
-    return { type: 'Urgent Care', category: 'HEALTHCARE' };
-  }
-  if (searchText.includes('pharmacy') || searchText.includes('drugstore')) {
-    return { type: 'Pharmacy', category: 'HEALTHCARE' };
-  }
-  if (searchText.includes('chiropract')) {
-    return { type: 'Chiropractic', category: 'HEALTHCARE' };
-  }
-  if (searchText.includes('optometr') || searchText.includes('eye doctor') || searchText.includes('vision')) {
-    return { type: 'Optometry', category: 'HEALTHCARE' };
-  }
-  
-  // Restaurants & Food Service - Enhanced detection
-  const restaurantKeywords = [
-    'restaurant', 'dining', 'bistro', 'grill', 'eatery', 'diner', 'steakhouse',
-    'coffee', 'cafe', 'espresso', 'coffeehouse',
-    'bakery', 'pastry', 'bread', 'donut', 'bagel',
-    'pizza', 'pizzeria',
-    'bar', 'pub', 'tavern', 'brewery', 'sports bar',
-    'catering', 'food service',
-    'sandwich', 'deli', 'sub', 'hoagie',
-    'burger', 'bbq', 'barbecue', 'wings', 'chicken',
-    'taco', 'mexican', 'chinese', 'indian', 'thai', 'sushi', 'japanese',
-    'food truck', 'ice cream', 'frozen yogurt',
-    'buffet', 'brunch', 'breakfast', 'lunch', 'dinner'
+  // STRICT automotive exclusions
+  const automotiveExclusions = [
+    'auto insurance', 'car insurance', 'auto loan', 'car loan',
+    'auto sales', 'car dealership', 'used cars', 'car lot'
   ];
   
-  const hasRestaurantKeyword = restaurantKeywords.some(keyword => searchText.includes(keyword));
-  
-  if (hasRestaurantKeyword) {
-    // More specific restaurant categorization
-    if (searchText.includes('coffee') || searchText.includes('cafe') || searchText.includes('espresso')) {
-      return { type: 'Coffee Shop', category: 'RESTAURANT_FOOD_SERVICE' };
+  for (const exclusion of automotiveExclusions) {
+    if (searchText.includes(exclusion)) {
+      return null; // REJECT: Not a service business
     }
-    if (searchText.includes('bakery') || searchText.includes('pastry') || searchText.includes('bread') || searchText.includes('donut')) {
-      return { type: 'Bakery', category: 'RESTAURANT_FOOD_SERVICE' };
-    }
-    if (searchText.includes('pizza')) {
-      return { type: 'Pizza Restaurant', category: 'RESTAURANT_FOOD_SERVICE' };
-    }
-    if (searchText.includes('bar') || searchText.includes('pub') || searchText.includes('tavern') || searchText.includes('brewery')) {
-      return { type: 'Bar & Grill', category: 'RESTAURANT_FOOD_SERVICE' };
-    }
-    if (searchText.includes('catering')) {
-      return { type: 'Catering', category: 'RESTAURANT_FOOD_SERVICE' };
-    }
-    if (searchText.includes('fast') || searchText.includes('quick') || searchText.includes('burger') || searchText.includes('drive')) {
-      return { type: 'Fast Food', category: 'RESTAURANT_FOOD_SERVICE' };
-    }
-    if (searchText.includes('fine') || searchText.includes('upscale') || searchText.includes('steakhouse')) {
-      return { type: 'Fine Dining', category: 'RESTAURANT_FOOD_SERVICE' };
-    }
-    // Default to casual dining for other restaurants
-    return { type: 'Casual Dining', category: 'RESTAURANT_FOOD_SERVICE' };
   }
   
-  // Beauty & Wellness
-  if (searchText.includes('hair salon') || searchText.includes('beauty salon') || searchText.includes('hairstylist')) {
-    return { type: 'Hair Salon', category: 'BEAUTY_WELLNESS' };
-  }
-  if (searchText.includes('nail salon') || searchText.includes('manicure') || searchText.includes('pedicure')) {
-    return { type: 'Nail Salon', category: 'BEAUTY_WELLNESS' };
-  }
-  if (searchText.includes('spa') || searchText.includes('wellness')) {
-    return { type: 'Spa & Wellness', category: 'BEAUTY_WELLNESS' };
-  }
-  if (searchText.includes('massage')) {
-    return { type: 'Massage Therapy', category: 'BEAUTY_WELLNESS' };
-  }
-  if (searchText.includes('barber')) {
-    return { type: 'Barbershop', category: 'BEAUTY_WELLNESS' };
-  }
-  if (searchText.includes('tattoo')) {
-    return { type: 'Tattoo Parlor', category: 'BEAUTY_WELLNESS' };
-  }
-  
-  // Automotive Services
-  if (searchText.includes('auto repair') || searchText.includes('car repair') || searchText.includes('mechanic') || searchText.includes('garage')) {
-    return { type: 'Auto Repair', category: 'AUTOMOTIVE_SERVICES' };
-  }
-  if (searchText.includes('oil change') || searchText.includes('lube')) {
-    return { type: 'Oil Change', category: 'AUTOMOTIVE_SERVICES' };
-  }
+  // Determine specific automotive service type
   if (searchText.includes('tire')) {
-    return { type: 'Tire Shop', category: 'AUTOMOTIVE_SERVICES' };
+    return { businessType: 'TIRE_SHOP', industryCategory: 'AUTOMOTIVE_SERVICES', displayName: 'Tire Shop' };
+  }
+  if (searchText.includes('oil change') || searchText.includes('quick lube')) {
+    return { businessType: 'OIL_CHANGE', industryCategory: 'AUTOMOTIVE_SERVICES', displayName: 'Oil Change' };
   }
   if (searchText.includes('car wash') || searchText.includes('auto wash')) {
-    return { type: 'Car Wash', category: 'AUTOMOTIVE_SERVICES' };
+    return { businessType: 'CAR_WASH', industryCategory: 'AUTOMOTIVE_SERVICES', displayName: 'Car Wash' };
+  }
+  if (searchText.includes('body shop') || searchText.includes('collision')) {
+    return { businessType: 'BODY_SHOP', industryCategory: 'AUTOMOTIVE_SERVICES', displayName: 'Body Shop' };
+  }
+  if (searchText.includes('transmission')) {
+    return { businessType: 'TRANSMISSION_REPAIR', industryCategory: 'AUTOMOTIVE_SERVICES', displayName: 'Transmission Repair' };
+  }
+  if (searchText.includes('brake')) {
+    return { businessType: 'BRAKE_SERVICE', industryCategory: 'AUTOMOTIVE_SERVICES', displayName: 'Brake Service' };
+  }
+  if (searchText.includes('muffler') || searchText.includes('exhaust')) {
+    return { businessType: 'MUFFLER_SHOP', industryCategory: 'AUTOMOTIVE_SERVICES', displayName: 'Muffler Shop' };
+  }
+  if (searchText.includes('detailing')) {
+    return { businessType: 'AUTO_DETAILING', industryCategory: 'AUTOMOTIVE_SERVICES', displayName: 'Auto Detailing' };
   }
   
-  // Fitness & Recreation
-  if (searchText.includes('gym') || searchText.includes('fitness') || searchText.includes('health club')) {
-    return { type: 'Gym & Fitness', category: 'FITNESS_RECREATION' };
+  // Default to auto repair for general automotive services
+  return { businessType: 'AUTO_REPAIR', industryCategory: 'AUTOMOTIVE_SERVICES', displayName: 'Auto Repair' };
+}
+
+// RESTAURANT VALIDATION - ULTRA STRICT  
+function validateRestaurantBusiness(searchText: string): {
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
+  displayName: string;
+} | null {
+  
+  // MANDATORY food service keywords
+  const mandatoryFoodKeywords = [
+    'restaurant', 'dining', 'food', 'cafe', 'coffee', 'bakery', 'pizza',
+    'bar', 'grill', 'bistro', 'eatery', 'kitchen', 'catering'
+  ];
+  
+  const hasMandatoryKeyword = mandatoryFoodKeywords.some(keyword => 
+    searchText.includes(keyword)
+  );
+  
+  if (!hasMandatoryKeyword) {
+    return null; // REJECT: No food service keywords
+  }
+  
+  // Determine specific restaurant type
+  if (searchText.includes('coffee') || searchText.includes('cafe') || searchText.includes('espresso')) {
+    return { businessType: 'COFFEE_SHOP', industryCategory: 'RESTAURANT_FOOD_SERVICE', displayName: 'Coffee Shop' };
+  }
+  if (searchText.includes('bakery') || searchText.includes('pastry') || searchText.includes('donut')) {
+    return { businessType: 'BAKERY', industryCategory: 'RESTAURANT_FOOD_SERVICE', displayName: 'Bakery' };
+  }
+  if (searchText.includes('pizza')) {
+    return { businessType: 'PIZZA_RESTAURANT', industryCategory: 'RESTAURANT_FOOD_SERVICE', displayName: 'Pizza Restaurant' };
+  }
+  if (searchText.includes('bar') || searchText.includes('pub') || searchText.includes('tavern')) {
+    return { businessType: 'BAR_GRILL', industryCategory: 'RESTAURANT_FOOD_SERVICE', displayName: 'Bar & Grill' };
+  }
+  if (searchText.includes('catering')) {
+    return { businessType: 'CATERING', industryCategory: 'RESTAURANT_FOOD_SERVICE', displayName: 'Catering' };
+  }
+  if (searchText.includes('fast') || searchText.includes('quick') || searchText.includes('drive')) {
+    return { businessType: 'FAST_FOOD', industryCategory: 'RESTAURANT_FOOD_SERVICE', displayName: 'Fast Food' };
+  }
+  if (searchText.includes('fine') || searchText.includes('upscale') || searchText.includes('steakhouse')) {
+    return { businessType: 'FINE_DINING', industryCategory: 'RESTAURANT_FOOD_SERVICE', displayName: 'Fine Dining' };
+  }
+  
+  // Default to casual dining
+  return { businessType: 'CASUAL_DINING', industryCategory: 'RESTAURANT_FOOD_SERVICE', displayName: 'Casual Dining' };
+}
+
+// HEALTHCARE VALIDATION - ULTRA STRICT
+function validateHealthcareBusiness(searchText: string): {
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
+  displayName: string;
+} | null {
+  
+  if (searchText.includes('dental') || searchText.includes('dentist')) {
+    return { businessType: 'DENTAL_PRACTICE', industryCategory: 'HEALTHCARE', displayName: 'Dental Practice' };
+  }
+  if (searchText.includes('veterinary') || searchText.includes('animal hospital') || searchText.includes('vet ')) {
+    return { businessType: 'VETERINARY_CLINIC', industryCategory: 'HEALTHCARE', displayName: 'Veterinary Clinic' };
+  }
+  if (searchText.includes('medical') || searchText.includes('doctor') || searchText.includes('physician')) {
+    return { businessType: 'MEDICAL_OFFICE', industryCategory: 'HEALTHCARE', displayName: 'Medical Office' };
+  }
+  if (searchText.includes('pharmacy') || searchText.includes('drugstore')) {
+    return { businessType: 'PHARMACY', industryCategory: 'HEALTHCARE', displayName: 'Pharmacy' };
+  }
+  
+  return null;
+}
+
+// Additional validation functions for other categories...
+function validateBeautyBusiness(searchText: string): {
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
+  displayName: string;
+} | null {
+  
+  if (searchText.includes('hair salon') || searchText.includes('beauty salon')) {
+    return { businessType: 'HAIR_SALON', industryCategory: 'BEAUTY_WELLNESS', displayName: 'Hair Salon' };
+  }
+  if (searchText.includes('nail salon') || searchText.includes('manicure')) {
+    return { businessType: 'NAIL_SALON', industryCategory: 'BEAUTY_WELLNESS', displayName: 'Nail Salon' };
+  }
+  if (searchText.includes('spa') || searchText.includes('wellness')) {
+    return { businessType: 'SPA_WELLNESS', industryCategory: 'BEAUTY_WELLNESS', displayName: 'Spa & Wellness' };
+  }
+  if (searchText.includes('barber')) {
+    return { businessType: 'BARBERSHOP', industryCategory: 'BEAUTY_WELLNESS', displayName: 'Barbershop' };
+  }
+  
+  return null;
+}
+
+function validateFitnessBusiness(searchText: string): {
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
+  displayName: string;
+} | null {
+  
+  if (searchText.includes('gym') || searchText.includes('fitness')) {
+    return { businessType: 'GYM_FITNESS', industryCategory: 'FITNESS_RECREATION', displayName: 'Gym & Fitness' };
   }
   if (searchText.includes('yoga')) {
-    return { type: 'Yoga Studio', category: 'FITNESS_RECREATION' };
-  }
-  if (searchText.includes('martial arts') || searchText.includes('karate') || searchText.includes('taekwondo')) {
-    return { type: 'Martial Arts', category: 'FITNESS_RECREATION' };
+    return { businessType: 'YOGA_STUDIO', industryCategory: 'FITNESS_RECREATION', displayName: 'Yoga Studio' };
   }
   
-  // Pet Services
+  return null;
+}
+
+function validatePetServicesBusiness(searchText: string): {
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
+  displayName: string;
+} | null {
+  
   if (searchText.includes('pet grooming') || searchText.includes('dog grooming')) {
-    return { type: 'Pet Grooming', category: 'PET_SERVICES' };
-  }
-  if (searchText.includes('pet boarding') || searchText.includes('dog boarding')) {
-    return { type: 'Pet Boarding', category: 'PET_SERVICES' };
+    return { businessType: 'PET_GROOMING', industryCategory: 'PET_SERVICES', displayName: 'Pet Grooming' };
   }
   if (searchText.includes('pet store') || searchText.includes('pet shop')) {
-    return { type: 'Pet Store', category: 'PET_SERVICES' };
+    return { businessType: 'PET_STORE', industryCategory: 'PET_SERVICES', displayName: 'Pet Store' };
   }
   
-  // Business Services
-  if (searchText.includes('accounting') || searchText.includes('bookkeeping') || searchText.includes('cpa')) {
-    return { type: 'Accounting Services', category: 'BUSINESS_SERVICES' };
+  return null;
+}
+
+function validateRetailBusiness(searchText: string): {
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
+  displayName: string;
+} | null {
+  
+  if (searchText.includes('boutique') || searchText.includes('clothing')) {
+    return { businessType: 'BOUTIQUE_CLOTHING', industryCategory: 'SPECIALTY_RETAIL', displayName: 'Boutique Clothing' };
   }
-  if (searchText.includes('lawyer') || searchText.includes('attorney') || searchText.includes('law')) {
-    return { type: 'Legal Services', category: 'BUSINESS_SERVICES' };
+  if (searchText.includes('jewelry')) {
+    return { businessType: 'JEWELRY_STORE', industryCategory: 'SPECIALTY_RETAIL', displayName: 'Jewelry Store' };
+  }
+  
+  return null;
+}
+
+function validateBusinessServicesBusiness(searchText: string): {
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
+  displayName: string;
+} | null {
+  
+  if (searchText.includes('accounting') || searchText.includes('bookkeeping') || searchText.includes('cpa')) {
+    return { businessType: 'ACCOUNTING_SERVICES', industryCategory: 'BUSINESS_SERVICES', displayName: 'Accounting Services' };
+  }
+  if (searchText.includes('law') || searchText.includes('attorney') || searchText.includes('lawyer')) {
+    return { businessType: 'LEGAL_SERVICES', industryCategory: 'BUSINESS_SERVICES', displayName: 'Legal Services' };
   }
   if (searchText.includes('real estate') || searchText.includes('realtor')) {
-    return { type: 'Real Estate', category: 'BUSINESS_SERVICES' };
+    return { businessType: 'REAL_ESTATE', industryCategory: 'BUSINESS_SERVICES', displayName: 'Real Estate' };
   }
   
-  // For unrecognized businesses, return null to exclude them
-  // This prevents random businesses from being included in industry-specific searches
   return null;
 }
 
@@ -457,49 +511,60 @@ function calculateQualificationScore(business: ApifyBusiness, businessType: stri
   return { indicators, score, isQualified };
 }
 
-function buildSearchQuery(criteria: SearchCriteria): string {
-  const { location, industryTypes, industryCategory } = criteria;
+// COMPLETELY REWRITTEN: Industry-specific search query construction
+function buildPreciseSearchQuery(criteria: SearchCriteria): string {
+  const { location, industryCategory } = criteria;
   
-  // If no specific industry types, search broadly
-  if (industryTypes.length === 0) {
+  if (!industryCategory) {
     return `business near ${location}`;
   }
   
-  // If many industry types, use generic terms
-  if (industryTypes.length > 5) {
-    return `business services near ${location}`;
+  // Get industry-specific keywords from our new mapping
+  const industryKeywords = INDUSTRY_SEARCH_KEYWORDS[industryCategory as IndustryCategory];
+  
+  if (!industryKeywords || industryKeywords.length === 0) {
+    return `business near ${location}`;
   }
   
-  // For restaurant searches, be very specific with multiple restaurant-focused terms
-  if (industryCategory === 'RESTAURANT_FOOD_SERVICE') {
-    const restaurantTerms: string[] = [];
-    for (const industryType of industryTypes.slice(0, 3)) {
-      const terms = businessTypeMapping[industryType];
-      if (terms && terms.length > 0) {
-        // Use all terms for restaurants to be more specific
-        restaurantTerms.push(...terms.slice(0, 2)); // Use first 2 terms per type
-      }
-    }
-    
-    // Add general restaurant terms to ensure we get restaurants
-    restaurantTerms.push('restaurant', 'food', 'dining', 'cafe', 'eatery');
-    
-    // Remove duplicates and create specific query
-    const uniqueTerms = [...new Set(restaurantTerms)];
-    return `(${uniqueTerms.slice(0, 8).join(' OR ')}) near ${location}`;
+  // CRITICAL: Use precise, targeted search terms for each industry
+  switch (industryCategory) {
+    case 'AUTOMOTIVE_SERVICES':
+      // Ultra-specific automotive search to prevent contamination
+      return `(auto repair OR car repair OR automotive service OR mechanic OR tire shop) near ${location}`;
+      
+    case 'RESTAURANT_FOOD_SERVICE':
+      // Precise restaurant search
+      return `(restaurant OR dining OR food service OR cafe OR bakery) near ${location}`;
+      
+    case 'HEALTHCARE':
+      // Medical-specific search
+      return `(medical office OR dental office OR clinic OR doctor office) near ${location}`;
+      
+    case 'BEAUTY_WELLNESS':
+      // Beauty-specific search
+      return `(hair salon OR beauty salon OR nail salon OR spa) near ${location}`;
+      
+    case 'FITNESS_RECREATION':
+      // Fitness-specific search
+      return `(gym OR fitness center OR yoga studio OR health club) near ${location}`;
+      
+    case 'PET_SERVICES':
+      // Pet-specific search
+      return `(pet grooming OR pet store OR veterinary OR animal hospital) near ${location}`;
+      
+    case 'SPECIALTY_RETAIL':
+      // Retail-specific search
+      return `(boutique OR jewelry store OR specialty store) near ${location}`;
+      
+    case 'BUSINESS_SERVICES':
+      // Business services search
+      return `(accounting firm OR law firm OR real estate office OR consulting) near ${location}`;
+      
+    default:
+      // Use the top 5 keywords for the category
+      const topKeywords = industryKeywords.slice(0, 5);
+      return `(${topKeywords.join(' OR ')}) near ${location}`;
   }
-  
-  // Use specific terms for other industries  
-  const searchTerms: string[] = [];
-  for (const industryType of industryTypes.slice(0, 3)) { // Limit to first 3 for query length
-    const terms = businessTypeMapping[industryType];
-    if (terms && terms.length > 0) {
-      searchTerms.push(terms[0]); // Use primary term
-    }
-  }
-  
-  const queryTerms = searchTerms.length > 0 ? searchTerms.join(' OR ') : 'business';
-  return `${queryTerms} near ${location}`;
 }
 
 export async function searchBusinesses(
@@ -515,6 +580,19 @@ export async function searchBusinesses(
   let usingLiveData = false;
   let apifyClient: ApifyClient | null = null;
   let message = '';
+
+  // CRITICAL: Validate that we have a specific industry category to search for
+  if (!criteria.industryCategory || criteria.industryCategory === 'all') {
+    console.log('No specific industry category provided - using mock data');
+    const mockBusinesses = getStrictlyFilteredMockBusinesses(criteria);
+    return {
+      businesses: mockBusinesses,
+      totalResults: mockBusinesses.length,
+      searchCriteria: criteria,
+      dataSource: 'mock',
+      message: 'Please select a specific industry category for accurate results',
+    };
+  }
 
   // Try to get user-specific API client first
   if (userEmail) {
@@ -538,7 +616,7 @@ export async function searchBusinesses(
   // If no API client available, return mock data
   if (!apifyClient) {
     console.log('No Apify client available, using mock data');
-    const mockBusinesses = getMockBusinesses(criteria);
+    const mockBusinesses = getStrictlyFilteredMockBusinesses(criteria);
     return {
       businesses: mockBusinesses,
       totalResults: mockBusinesses.length,
@@ -549,16 +627,17 @@ export async function searchBusinesses(
   }
 
   try {
-    console.log('Starting Apify search with criteria:', criteria);
-    console.log('Using live data:', usingLiveData);
+    console.log('Starting STRICT Apify search with criteria:', criteria);
+    console.log('Target industry category:', criteria.industryCategory);
     
-    const searchQuery = buildSearchQuery(criteria);
-    console.log('Search query:', searchQuery);
+    // Use new precise search query construction
+    const searchQuery = buildPreciseSearchQuery(criteria);
+    console.log('PRECISE Search query:', searchQuery);
     
     // Run the Google Maps scraper
     const input = {
       searchStringsArray: [searchQuery],
-      maxCrawledPlacesPerSearch: 20, // Limit results
+      maxCrawledPlacesPerSearch: 30, // Increased to get more candidates for filtering
       language: 'en',
       country: 'us',
       includeHistogram: false,
@@ -600,7 +679,7 @@ export async function searchBusinesses(
       };
     }
 
-    // Transform Apify results to our format with improved filtering
+    // ULTRA-STRICT FILTERING: Transform Apify results using new validation
     const businesses: Business[] = items
       .filter((item: any) => item && item.title && item.address)
       .map((item: any, index: number): Business | null => {
@@ -619,34 +698,34 @@ export async function searchBusinesses(
           imageUrl: item.imageUrl,
         };
 
-        const businessClassification = categorizeBusinessType(
+        // CRITICAL: Use new strict business categorization
+        const businessClassification = strictBusinessCategorization(
+          item.title || '',
           item.categories || [item.categoryName], 
-          item.title
+          criteria.industryCategory as IndustryCategory
         );
         
-        // If business classification returns null, exclude this business
+        // REJECT: Business doesn't strictly match industry requirements
         if (!businessClassification) {
-          console.log(`Excluding business: ${item.title} - doesn't match industry criteria`);
+          console.log(`STRICT FILTER: Excluding "${item.title}" - failed industry validation for ${criteria.industryCategory}`);
           return null;
         }
 
-        // Additional filter: if searching for specific industry category, ensure it matches
-        if (criteria.industryCategory && criteria.industryCategory !== 'all') {
-          if (businessClassification.category !== criteria.industryCategory) {
-            console.log(`Excluding business: ${item.title} - category mismatch (${businessClassification.category} vs ${criteria.industryCategory})`);
-            return null;
-          }
+        // DOUBLE-CHECK: Ensure the business category exactly matches what was requested
+        if (businessClassification.industryCategory !== criteria.industryCategory) {
+          console.log(`STRICT FILTER: Excluding "${item.title}" - category mismatch (${businessClassification.industryCategory} vs ${criteria.industryCategory})`);
+          return null;
         }
         
-        const qualification = calculateQualificationScore(apifyBusiness, businessClassification.type);
+        const qualification = calculateQualificationScore(apifyBusiness, businessClassification.businessType);
         
         return {
           id: `apify-${item.placeId || index}-${Date.now()}`,
           name: apifyBusiness.title,
           address: apifyBusiness.address,
           phone: apifyBusiness.phone,
-          businessType: businessClassification.type,
-          industryCategory: businessClassification.category,
+          businessType: businessClassification.displayName,
+          industryCategory: businessClassification.industryCategory,
           estimatedRevenue: estimateRevenue(apifyBusiness.reviewsCount, apifyBusiness.rating),
           yearsInBusiness: estimateYearsInBusiness(apifyBusiness.reviewsCount),
           employeeCount: estimateEmployees(apifyBusiness.reviewsCount),
@@ -656,23 +735,23 @@ export async function searchBusinesses(
           isQualified: qualification.isQualified,
         };
       })
-      .filter((business): business is Business => business !== null); // Remove null businesses
+      .filter((business): business is Business => business !== null); // Remove all rejected businesses
 
-    console.log(`Transformed ${businesses.length} businesses`);
+    console.log(`STRICT FILTERING: ${items.length} raw results -> ${businesses.length} validated ${criteria.industryCategory} businesses`);
 
     return {
       businesses,
       totalResults: businesses.length,
       searchCriteria: criteria,
       dataSource: 'live',
-      message: message || `Found ${businesses.length} ${criteria.industryCategory ? criteria.industryCategory.toLowerCase().replace('_', ' ') : ''} businesses using live data`,
+      message: message || `Found ${businesses.length} verified ${criteria.industryCategory.toLowerCase().replace('_', ' ')} businesses using strict validation`,
     };
 
   } catch (error) {
     console.error('Error in Apify search:', error);
     
     // Fallback to mock data in case of error
-    const mockBusinesses = getMockBusinesses(criteria);
+    const mockBusinesses = getStrictlyFilteredMockBusinesses(criteria);
     
     return {
       businesses: mockBusinesses,
@@ -684,12 +763,14 @@ export async function searchBusinesses(
   }
 }
 
-// Fallback mock data in case Apify fails
-function getMockBusinesses(criteria: SearchCriteria): Business[] {
-  const mockBusinesses = [
-    // Healthcare
+// STRICT MOCK DATA: Industry-specific examples with ultra-precise categorization
+function getStrictlyFilteredMockBusinesses(criteria: SearchCriteria): Business[] {
+  
+  // COMPREHENSIVE MOCK DATA: Organized by industry category with multiple examples per category
+  const allMockBusinesses: Business[] = [
+    // HEALTHCARE BUSINESSES
     {
-      id: 'fallback-1',
+      id: 'healthcare-1',
       name: 'Family Health Clinic',
       address: `456 Healthcare Ave, ${criteria.location}`,
       phone: '(555) 555-0123',
@@ -709,7 +790,7 @@ function getMockBusinesses(criteria: SearchCriteria): Business[] {
       isQualified: true,
     },
     {
-      id: 'fallback-2',
+      id: 'healthcare-2',
       name: 'Sunshine Dental Group',
       address: `789 Smile Street, ${criteria.location}`,
       phone: '(555) 555-0456',
@@ -728,51 +809,30 @@ function getMockBusinesses(criteria: SearchCriteria): Business[] {
       qualificationScore: 92,
       isQualified: true,
     },
-    // Restaurant & Food Service
     {
-      id: 'fallback-3',
-      name: 'Tony\'s Italian Bistro',
-      address: `123 Main Street, ${criteria.location}`,
+      id: 'healthcare-3',
+      name: 'Premier Animal Hospital',
+      address: `321 Pet Care Blvd, ${criteria.location}`,
       phone: '(555) 555-0789',
-      businessType: 'Casual Dining',
-      industryCategory: 'RESTAURANT_FOOD_SERVICE',
-      estimatedRevenue: '$35K-65K monthly',
-      yearsInBusiness: '4 years',
-      employeeCount: '15-20 employees',
-      website: 'https://tonysitalianbistro.com',
+      businessType: 'Veterinary Clinic',
+      industryCategory: 'HEALTHCARE',
+      estimatedRevenue: '$40K-70K monthly',
+      yearsInBusiness: '8 years',
+      employeeCount: '12-18 employees',
+      website: 'https://premieranimalhospital.com',
       qualificationIndicators: {
         revenueQualified: true,
         experienceQualified: true,
         locationQualified: true,
         industryQualified: true,
       },
-      qualificationScore: 88,
+      qualificationScore: 95,
       isQualified: true,
     },
-    // Beauty & Wellness
+
+    // AUTOMOTIVE SERVICES BUSINESSES  
     {
-      id: 'fallback-4',
-      name: 'Bella Hair Studio',
-      address: `567 Beauty Boulevard, ${criteria.location}`,
-      phone: '(555) 555-0321',
-      businessType: 'Hair Salon',
-      industryCategory: 'BEAUTY_WELLNESS',
-      estimatedRevenue: '$15K-30K monthly',
-      yearsInBusiness: '2 years',
-      employeeCount: '6-10 employees',
-      website: 'https://bellahairstudio.com',
-      qualificationIndicators: {
-        revenueQualified: true,
-        experienceQualified: true,
-        locationQualified: true,
-        industryQualified: true,
-      },
-      qualificationScore: 80,
-      isQualified: true,
-    },
-    // Automotive Services
-    {
-      id: 'fallback-5',
+      id: 'automotive-1',
       name: 'Mike\'s Auto Repair',
       address: `890 Mechanic Lane, ${criteria.location}`,
       phone: '(555) 555-0654',
@@ -791,9 +851,154 @@ function getMockBusinesses(criteria: SearchCriteria): Business[] {
       qualificationScore: 86,
       isQualified: true,
     },
-    // Fitness & Recreation
     {
-      id: 'fallback-6',
+      id: 'automotive-2',
+      name: 'QuickLube Express',
+      address: `445 Service Road, ${criteria.location}`,
+      phone: '(555) 555-0987',
+      businessType: 'Oil Change',
+      industryCategory: 'AUTOMOTIVE_SERVICES',
+      estimatedRevenue: '$15K-25K monthly',
+      yearsInBusiness: '3 years',
+      employeeCount: '6-8 employees',
+      website: 'https://quicklubeexpress.com',
+      qualificationIndicators: {
+        revenueQualified: true,
+        experienceQualified: true,
+        locationQualified: true,
+        industryQualified: true,
+      },
+      qualificationScore: 78,
+      isQualified: true,
+    },
+    {
+      id: 'automotive-3',
+      name: 'Pro Tire Center',
+      address: `667 Tire Street, ${criteria.location}`,
+      phone: '(555) 555-0321',
+      businessType: 'Tire Shop',
+      industryCategory: 'AUTOMOTIVE_SERVICES',
+      estimatedRevenue: '$30K-50K monthly',
+      yearsInBusiness: '4 years',
+      employeeCount: '10-14 employees',
+      website: 'https://protirecenter.com',
+      qualificationIndicators: {
+        revenueQualified: true,
+        experienceQualified: true,
+        locationQualified: true,
+        industryQualified: true,
+      },
+      qualificationScore: 82,
+      isQualified: true,
+    },
+
+    // RESTAURANT & FOOD SERVICE BUSINESSES
+    {
+      id: 'restaurant-1',
+      name: 'Tony\'s Italian Bistro',
+      address: `123 Main Street, ${criteria.location}`,
+      phone: '(555) 555-0789',
+      businessType: 'Casual Dining',
+      industryCategory: 'RESTAURANT_FOOD_SERVICE',
+      estimatedRevenue: '$35K-65K monthly',
+      yearsInBusiness: '4 years',
+      employeeCount: '15-20 employees',
+      website: 'https://tonysitalianbistro.com',
+      qualificationIndicators: {
+        revenueQualified: true,
+        experienceQualified: true,
+        locationQualified: true,
+        industryQualified: true,
+      },
+      qualificationScore: 88,
+      isQualified: true,
+    },
+    {
+      id: 'restaurant-2',
+      name: 'Corner Coffee House',
+      address: `234 Coffee Lane, ${criteria.location}`,
+      phone: '(555) 555-0456',
+      businessType: 'Coffee Shop',
+      industryCategory: 'RESTAURANT_FOOD_SERVICE',
+      estimatedRevenue: '$20K-35K monthly',
+      yearsInBusiness: '2 years',
+      employeeCount: '8-12 employees',
+      website: 'https://cornercoffeehouse.com',
+      qualificationIndicators: {
+        revenueQualified: true,
+        experienceQualified: true,
+        locationQualified: true,
+        industryQualified: true,
+      },
+      qualificationScore: 75,
+      isQualified: true,
+    },
+    {
+      id: 'restaurant-3',
+      name: 'Gino\'s Pizza Palace',
+      address: `345 Pizza Plaza, ${criteria.location}`,
+      phone: '(555) 555-0123',
+      businessType: 'Pizza Restaurant',
+      industryCategory: 'RESTAURANT_FOOD_SERVICE',
+      estimatedRevenue: '$25K-45K monthly',
+      yearsInBusiness: '7 years',
+      employeeCount: '12-16 employees',
+      website: 'https://ginospizzapalace.com',
+      qualificationIndicators: {
+        revenueQualified: true,
+        experienceQualified: true,
+        locationQualified: true,
+        industryQualified: true,
+      },
+      qualificationScore: 90,
+      isQualified: true,
+    },
+
+    // BEAUTY & WELLNESS BUSINESSES
+    {
+      id: 'beauty-1',
+      name: 'Bella Hair Studio',
+      address: `567 Beauty Boulevard, ${criteria.location}`,
+      phone: '(555) 555-0321',
+      businessType: 'Hair Salon',
+      industryCategory: 'BEAUTY_WELLNESS',
+      estimatedRevenue: '$15K-30K monthly',
+      yearsInBusiness: '2 years',
+      employeeCount: '6-10 employees',
+      website: 'https://bellahairstudio.com',
+      qualificationIndicators: {
+        revenueQualified: true,
+        experienceQualified: true,
+        locationQualified: true,
+        industryQualified: true,
+      },
+      qualificationScore: 80,
+      isQualified: true,
+    },
+    {
+      id: 'beauty-2',
+      name: 'Luxe Nail Spa',
+      address: `678 Spa Street, ${criteria.location}`,
+      phone: '(555) 555-0654',
+      businessType: 'Nail Salon',
+      industryCategory: 'BEAUTY_WELLNESS',
+      estimatedRevenue: '$18K-32K monthly',
+      yearsInBusiness: '3 years',
+      employeeCount: '8-12 employees',
+      website: 'https://luxenailspa.com',
+      qualificationIndicators: {
+        revenueQualified: true,
+        experienceQualified: true,
+        locationQualified: true,
+        industryQualified: true,
+      },
+      qualificationScore: 83,
+      isQualified: true,
+    },
+
+    // FITNESS & RECREATION BUSINESSES
+    {
+      id: 'fitness-1',
       name: 'PowerFit Gym',
       address: `234 Fitness Street, ${criteria.location}`,
       phone: '(555) 555-0987',
@@ -811,35 +1016,84 @@ function getMockBusinesses(criteria: SearchCriteria): Business[] {
       },
       qualificationScore: 83,
       isQualified: true,
+    },
+
+    // PET SERVICES BUSINESSES
+    {
+      id: 'pet-1',
+      name: 'Happy Tails Pet Grooming',
+      address: `789 Pet Lane, ${criteria.location}`,
+      phone: '(555) 555-0147',
+      businessType: 'Pet Grooming',
+      industryCategory: 'PET_SERVICES',
+      estimatedRevenue: '$12K-22K monthly',
+      yearsInBusiness: '2 years',
+      employeeCount: '4-6 employees',
+      website: 'https://happytailsgrooming.com',
+      qualificationIndicators: {
+        revenueQualified: true,
+        experienceQualified: true,
+        locationQualified: true,
+        industryQualified: true,
+      },
+      qualificationScore: 76,
+      isQualified: true,
+    },
+
+    // BUSINESS SERVICES BUSINESSES
+    {
+      id: 'business-1',
+      name: 'Thompson & Associates CPA',
+      address: `890 Business Park Dr, ${criteria.location}`,
+      phone: '(555) 555-0258',
+      businessType: 'Accounting Services',
+      industryCategory: 'BUSINESS_SERVICES',
+      estimatedRevenue: '$40K-80K monthly',
+      yearsInBusiness: '8 years',
+      employeeCount: '15-25 employees',
+      website: 'https://thompsoncpa.com',
+      qualificationIndicators: {
+        revenueQualified: true,
+        experienceQualified: true,
+        locationQualified: true,
+        industryQualified: true,
+      },
+      qualificationScore: 94,
+      isQualified: true,
     }
   ];
 
-  // Filter by industry category if specified
-  if (criteria.industryCategory && criteria.industryCategory !== 'all') {
-    const filteredByCategory = mockBusinesses.filter(business => 
-      business.industryCategory === criteria.industryCategory
-    );
-    
-    // Further filter by specific industry types if provided
-    if (criteria.industryTypes && criteria.industryTypes.length > 0) {
-      return filteredByCategory.filter(business => {
-        const businessInfo = displayNameToType[business.businessType];
-        return businessInfo && criteria.industryTypes.includes(businessInfo.type);
-      });
-    }
-    
-    return filteredByCategory;
+  // ULTRA-STRICT FILTERING: Only return businesses that exactly match the requested industry category
+  if (!criteria.industryCategory || criteria.industryCategory === 'all') {
+    console.log('MOCK DATA: No specific industry category requested - returning limited sample');
+    // Return a small sample from each category
+    return allMockBusinesses.slice(0, 6);
   }
 
-  // Filter by industry types if specified but no category
+  // Filter by exact industry category match
+  const categoryFilteredBusinesses = allMockBusinesses.filter(business => 
+    business.industryCategory === criteria.industryCategory
+  );
+
+  console.log(`MOCK DATA: Filtered to ${categoryFilteredBusinesses.length} businesses for category ${criteria.industryCategory}`);
+  
+  // Additional filtering by specific industry types if provided
   if (criteria.industryTypes && criteria.industryTypes.length > 0) {
-    return mockBusinesses.filter(business => {
-      const businessInfo = displayNameToType[business.businessType];
-      return businessInfo && criteria.industryTypes.includes(businessInfo.type);
+    const typeFilteredBusinesses = categoryFilteredBusinesses.filter(business => {
+      // Convert display names back to enum values for matching
+      const businessTypeEnum = business.businessType.toUpperCase().replace(/\s+/g, '_').replace(/&/g, '');
+      return criteria.industryTypes.some(type => 
+        type === businessTypeEnum || 
+        business.businessType === type ||
+        business.businessType.includes(type)
+      );
     });
+    
+    console.log(`MOCK DATA: Further filtered to ${typeFilteredBusinesses.length} businesses for specific types`);
+    return typeFilteredBusinesses;
   }
 
-  return mockBusinesses;
+  return categoryFilteredBusinesses;
 }
 
 export default {
