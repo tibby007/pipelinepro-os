@@ -1,0 +1,2 @@
+app/api/settings/apify-key/test/route.ts(78,25): error TS2304: Cannot find name 'session'.
+exit_code=2

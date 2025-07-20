@@ -1,0 +1,8 @@
+lib/auth.ts(65,5): error TS2322: Type '{ signIn: string; signUp: string; }' is not assignable to type 'Partial<PagesOptions>'.
+  Object literal may only specify known properties, and 'signUp' does not exist in type 'Partial<PagesOptions>'.
+scripts/seed.ts(212,9): error TS2322: Type '{ lastContactDate: Date; nextFollowUpDate: Date; businessName: string; contactName: string; email: string; phone: string; address: string; city: string; state: string; zipCode: string; ... 11 more ...; assignedToId: string; }' is not assignable to type '(Without<ProspectCreateInput, ProspectUncheckedCreateInput> & ProspectUncheckedCreateInput) | (Without<...> & ProspectCreateInput)'.
+  Type '{ lastContactDate: Date; nextFollowUpDate: Date; businessName: string; contactName: string; email: string; phone: string; address: string; city: string; state: string; zipCode: string; ... 11 more ...; assignedToId: string; }' is not assignable to type 'Without<ProspectCreateInput, ProspectUncheckedCreateInput> & ProspectUncheckedCreateInput'.
+    Type '{ lastContactDate: Date; nextFollowUpDate: Date; businessName: string; contactName: string; email: string; phone: string; address: string; city: string; state: string; zipCode: string; ... 11 more ...; assignedToId: string; }' is not assignable to type 'ProspectUncheckedCreateInput'.
+      Types of property 'businessType' are incompatible.
+        Type 'string' is not assignable to type 'HealthcareType'.
+exit_code=2

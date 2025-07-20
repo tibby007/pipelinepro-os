@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform data to include prospect info
-    const transformedActivities = activities?.map(activity => ({
+    const transformedActivities = activities?.map((activity: any) => ({
       id: activity?.id,
       type: activity?.type,
       prospectId: activity?.prospectId,

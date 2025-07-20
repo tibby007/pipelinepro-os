@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     });
     
     const avgQualificationScore = prospects.length > 0 
-      ? prospects.reduce((sum, p) => sum + (p.qualificationScore || 0), 0) / prospects.length 
+      ? prospects.reduce((sum: number, p: { qualificationScore: number | null }) => sum + (p.qualificationScore || 0), 0) / prospects.length 
       : 0;
 
     // Mock additional data for demonstration

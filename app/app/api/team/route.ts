@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform user data to team member format
-    const teamMembers = users.map(user => ({
+    const teamMembers = users.map((user: any) => ({
       id: user.id,
       name: user.name || 'Unknown User',
       email: user.email,

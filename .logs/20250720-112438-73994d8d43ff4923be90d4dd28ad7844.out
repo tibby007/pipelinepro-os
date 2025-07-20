@@ -1,0 +1,7 @@
+lib/apify-service.ts(699,39): error TS7006: Parameter 'place' implicitly has an 'any' type.
+lib/apify-service.ts(716,39): error TS7006: Parameter 'place' implicitly has an 'any' type.
+lib/apify-service.ts(730,30): error TS7006: Parameter 'place' implicitly has an 'any' type.
+lib/apify-service.ts(757,20): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ RESTAURANT_FOOD_SERVICE: string[]; HEALTHCARE: string[]; BEAUTY_WELLNESS: string[]; AUTOMOTIVE_SERVICES: string[]; FITNESS_RECREATION: string[]; PET_SERVICES: string[]; SPECIALTY_RETAIL: string[]; BUSINESS_SERVICES: string[]; }'.
+  No index signature with a parameter of type 'string' was found on type '{ RESTAURANT_FOOD_SERVICE: string[]; HEALTHCARE: string[]; BEAUTY_WELLNESS: string[]; AUTOMOTIVE_SERVICES: string[]; FITNESS_RECREATION: string[]; PET_SERVICES: string[]; SPECIALTY_RETAIL: string[]; BUSINESS_SERVICES: string[]; }'.
+lib/apify-service.ts(760,24): error TS7006: Parameter 'keyword' implicitly has an 'any' type.
+exit_code=2

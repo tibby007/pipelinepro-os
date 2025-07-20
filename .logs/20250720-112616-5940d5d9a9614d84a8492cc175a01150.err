@@ -1,0 +1,28 @@
+node:internal/modules/cjs/loader:1228
+  throw err;
+  ^
+
+Error: Cannot find module 'styled-jsx/package.json'
+Require stack:
+- /opt/hostedapp/node/root/app/node_modules/next/dist/server/require-hook.js
+- /opt/hostedapp/node/root/app/node_modules/next/dist/server/next.js
+- /opt/hostedapp/node/root/app/node_modules/next/dist/server/lib/start-server.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1225:15)
+    at resolve (node:internal/modules/helpers:146:19)
+    at Object.<anonymous> (/opt/hostedapp/node/root/app/node_modules/next/dist/server/require-hook.js:38:32)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/opt/hostedapp/node/root/app/node_modules/next/dist/server/require-hook.js',
+    '/opt/hostedapp/node/root/app/node_modules/next/dist/server/next.js',
+    '/opt/hostedapp/node/root/app/node_modules/next/dist/server/lib/start-server.js'
+  ]
+}
+
+Node.js v22.14.0

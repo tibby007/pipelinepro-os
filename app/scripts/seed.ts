@@ -1,5 +1,132 @@
 
-import { PrismaClient, IndustryType, IndustryCategory, BulkOperationType, BulkOperationStatus, ProspectStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+
+// Define enum constants that match the Prisma schema
+const IndustryCategory = {
+  HEALTHCARE: 'HEALTHCARE' as const,
+  RESTAURANT_FOOD_SERVICE: 'RESTAURANT_FOOD_SERVICE' as const,
+  BEAUTY_WELLNESS: 'BEAUTY_WELLNESS' as const,
+  AUTOMOTIVE_SERVICES: 'AUTOMOTIVE_SERVICES' as const,
+  FITNESS_RECREATION: 'FITNESS_RECREATION' as const,
+  PET_SERVICES: 'PET_SERVICES' as const,
+  SPECIALTY_RETAIL: 'SPECIALTY_RETAIL' as const,
+  BUSINESS_SERVICES: 'BUSINESS_SERVICES' as const
+};
+
+const IndustryType = {
+  // Healthcare
+  MEDICAL_OFFICE: 'MEDICAL_OFFICE' as const,
+  DENTAL_PRACTICE: 'DENTAL_PRACTICE' as const,
+  VETERINARY_CLINIC: 'VETERINARY_CLINIC' as const,
+  PHYSICAL_THERAPY: 'PHYSICAL_THERAPY' as const,
+  MENTAL_HEALTH: 'MENTAL_HEALTH' as const,
+  URGENT_CARE: 'URGENT_CARE' as const,
+  MEDICAL_IMAGING: 'MEDICAL_IMAGING' as const,
+  LABORATORY: 'LABORATORY' as const,
+  PHARMACY: 'PHARMACY' as const,
+  SPECIALTY_CLINIC: 'SPECIALTY_CLINIC' as const,
+  CHIROPRACTIC: 'CHIROPRACTIC' as const,
+  OPTOMETRY: 'OPTOMETRY' as const,
+  DERMATOLOGY: 'DERMATOLOGY' as const,
+  // Restaurants & Food Service
+  FAST_FOOD: 'FAST_FOOD' as const,
+  CASUAL_DINING: 'CASUAL_DINING' as const,
+  FINE_DINING: 'FINE_DINING' as const,
+  COFFEE_SHOP: 'COFFEE_SHOP' as const,
+  BAKERY: 'BAKERY' as const,
+  FOOD_TRUCK: 'FOOD_TRUCK' as const,
+  CATERING: 'CATERING' as const,
+  BAR_GRILL: 'BAR_GRILL' as const,
+  PIZZA_RESTAURANT: 'PIZZA_RESTAURANT' as const,
+  ETHNIC_CUISINE: 'ETHNIC_CUISINE' as const,
+  // Beauty & Wellness
+  HAIR_SALON: 'HAIR_SALON' as const,
+  NAIL_SALON: 'NAIL_SALON' as const,
+  SPA_WELLNESS: 'SPA_WELLNESS' as const,
+  MASSAGE_THERAPY: 'MASSAGE_THERAPY' as const,
+  TATTOO_PARLOR: 'TATTOO_PARLOR' as const,
+  BARBERSHOP: 'BARBERSHOP' as const,
+  BEAUTY_SUPPLY: 'BEAUTY_SUPPLY' as const,
+  COSMETIC_SERVICES: 'COSMETIC_SERVICES' as const,
+  TANNING_SALON: 'TANNING_SALON' as const,
+  // Automotive Services
+  AUTO_REPAIR: 'AUTO_REPAIR' as const,
+  OIL_CHANGE: 'OIL_CHANGE' as const,
+  TIRE_SHOP: 'TIRE_SHOP' as const,
+  CAR_WASH: 'CAR_WASH' as const,
+  AUTO_DETAILING: 'AUTO_DETAILING' as const,
+  TRANSMISSION_REPAIR: 'TRANSMISSION_REPAIR' as const,
+  BODY_SHOP: 'BODY_SHOP' as const,
+  MUFFLER_SHOP: 'MUFFLER_SHOP' as const,
+  BRAKE_SERVICE: 'BRAKE_SERVICE' as const,
+  // Fitness & Recreation
+  GYM_FITNESS: 'GYM_FITNESS' as const,
+  YOGA_STUDIO: 'YOGA_STUDIO' as const,
+  MARTIAL_ARTS: 'MARTIAL_ARTS' as const,
+  DANCE_STUDIO: 'DANCE_STUDIO' as const,
+  PERSONAL_TRAINING: 'PERSONAL_TRAINING' as const,
+  SPORTS_FACILITY: 'SPORTS_FACILITY' as const,
+  RECREATION_CENTER: 'RECREATION_CENTER' as const,
+  CLIMBING_GYM: 'CLIMBING_GYM' as const,
+  // Pet Services
+  VETERINARY_SERVICES: 'VETERINARY_SERVICES' as const,
+  PET_GROOMING: 'PET_GROOMING' as const,
+  PET_BOARDING: 'PET_BOARDING' as const,
+  PET_TRAINING: 'PET_TRAINING' as const,
+  PET_DAYCARE: 'PET_DAYCARE' as const,
+  PET_STORE: 'PET_STORE' as const,
+  DOG_WALKING: 'DOG_WALKING' as const,
+  // Specialty Retail
+  BOUTIQUE_CLOTHING: 'BOUTIQUE_CLOTHING' as const,
+  JEWELRY_STORE: 'JEWELRY_STORE' as const,
+  ELECTRONICS_REPAIR: 'ELECTRONICS_REPAIR' as const,
+  BIKE_SHOP: 'BIKE_SHOP' as const,
+  BOOKSTORE: 'BOOKSTORE' as const,
+  GIFT_SHOP: 'GIFT_SHOP' as const,
+  SPORTING_GOODS: 'SPORTING_GOODS' as const,
+  HOME_DECOR: 'HOME_DECOR' as const,
+  ANTIQUE_SHOP: 'ANTIQUE_SHOP' as const,
+  // Business Services
+  ACCOUNTING_SERVICES: 'ACCOUNTING_SERVICES' as const,
+  LEGAL_SERVICES: 'LEGAL_SERVICES' as const,
+  MARKETING_AGENCY: 'MARKETING_AGENCY' as const,
+  CONSULTING: 'CONSULTING' as const,
+  REAL_ESTATE: 'REAL_ESTATE' as const,
+  INSURANCE_AGENCY: 'INSURANCE_AGENCY' as const,
+  FINANCIAL_PLANNING: 'FINANCIAL_PLANNING' as const,
+  IT_SERVICES: 'IT_SERVICES' as const,
+  CLEANING_SERVICES: 'CLEANING_SERVICES' as const,
+  LANDSCAPING: 'LANDSCAPING' as const,
+  OTHER: 'OTHER' as const
+};
+
+const ProspectStatus = {
+  NEW: 'NEW' as const,
+  CONTACTED: 'CONTACTED' as const,
+  QUALIFIED: 'QUALIFIED' as const,
+  SUBMITTED: 'SUBMITTED' as const,
+  NURTURING: 'NURTURING' as const,
+  CONVERTED: 'CONVERTED' as const,
+  DEAD: 'DEAD' as const
+};
+
+const BulkOperationType = {
+  BULK_SEARCH: 'BULK_SEARCH' as const,
+  BULK_OUTREACH: 'BULK_OUTREACH' as const,
+  BULK_QUALIFICATION: 'BULK_QUALIFICATION' as const,
+  BULK_UPDATE: 'BULK_UPDATE' as const,
+  BULK_EXPORT: 'BULK_EXPORT' as const,
+  INDUSTRY_ANALYSIS: 'INDUSTRY_ANALYSIS' as const
+};
+
+const BulkOperationStatus = {
+  PENDING: 'PENDING' as const,
+  IN_PROGRESS: 'IN_PROGRESS' as const,
+  COMPLETED: 'COMPLETED' as const,
+  FAILED: 'FAILED' as const,
+  CANCELLED: 'CANCELLED' as const,
+  PAUSED: 'PAUSED' as const
+};
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();

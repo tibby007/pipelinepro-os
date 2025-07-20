@@ -1,0 +1,211 @@
+sending incremental file list
+components.json
+dev.log
+next-env.d.ts
+next.config.js
+package.json
+postcss.config.js
+tailwind.config.ts
+tsconfig.json
+tsconfig.tsbuildinfo
+app/
+app/globals.css
+app/layout.tsx
+app/page.tsx
+app/api/
+app/api/analytics/
+app/api/analytics/route.ts
+app/api/auth/
+app/api/auth/[...nextauth]/
+app/api/auth/[...nextauth]/route.ts
+app/api/auth/signup/
+app/api/auth/signup/route.ts
+app/api/documents/
+app/api/documents/route.ts
+app/api/outreach/
+app/api/outreach/route.ts
+app/api/profile/
+app/api/profile/route.ts
+app/api/prospects/
+app/api/prospects/route.ts
+app/api/prospects/search/
+app/api/prospects/search/route.ts
+app/api/settings/
+app/api/settings/route.ts
+app/api/settings/apify-key/
+app/api/settings/apify-key/route.ts
+app/api/settings/apify-key/test/
+app/api/settings/apify-key/test/route.ts
+app/api/submissions/
+app/api/submissions/route.ts
+app/api/team/
+app/api/team/route.ts
+app/auth/
+app/auth/signin/
+app/auth/signin/page.tsx
+app/auth/signup/
+app/auth/signup/page.tsx
+app/dashboard/
+app/dashboard/layout.tsx
+app/dashboard/page.tsx
+app/dashboard/analytics/
+app/dashboard/analytics/page.tsx
+app/dashboard/documents/
+app/dashboard/documents/page.tsx
+app/dashboard/outreach/
+app/dashboard/outreach/page.tsx
+app/dashboard/prospects/
+app/dashboard/prospects/page.tsx
+app/dashboard/qualification/
+app/dashboard/qualification/page.tsx
+app/dashboard/research/
+app/dashboard/research/page.tsx
+app/dashboard/settings/
+app/dashboard/settings/page.tsx
+app/dashboard/submissions/
+app/dashboard/submissions/page.tsx
+app/dashboard/team/
+app/dashboard/team/page.tsx
+app/profile-setup/
+app/profile-setup/page.tsx
+components/
+components/providers.tsx
+components/theme-provider.tsx
+components/auth/
+components/auth/signin-form.tsx
+components/auth/signup-form.tsx
+components/layout/
+components/layout/header.tsx
+components/layout/sidebar.tsx
+components/profile/
+components/profile/profile-completion-checker.tsx
+components/profile/profile-setup-form.tsx
+components/prospects/
+components/prospects/search-form.tsx
+components/prospects/search-results.tsx
+components/ui/
+components/ui/accordion.tsx
+components/ui/alert-dialog.tsx
+components/ui/alert.tsx
+components/ui/aspect-ratio.tsx
+components/ui/avatar.tsx
+components/ui/badge.tsx
+components/ui/breadcrumb.tsx
+components/ui/button.tsx
+components/ui/calendar.tsx
+components/ui/card.tsx
+components/ui/carousel.tsx
+components/ui/checkbox.tsx
+components/ui/collapsible.tsx
+components/ui/command.tsx
+components/ui/context-menu.tsx
+components/ui/date-range-picker.tsx
+components/ui/dialog.tsx
+components/ui/drawer.tsx
+components/ui/dropdown-menu.tsx
+components/ui/form.tsx
+components/ui/hover-card.tsx
+components/ui/input-otp.tsx
+components/ui/input.tsx
+components/ui/label.tsx
+components/ui/menubar.tsx
+components/ui/navigation-menu.tsx
+components/ui/pagination.tsx
+components/ui/popover.tsx
+components/ui/progress.tsx
+components/ui/radio-group.tsx
+components/ui/resizable.tsx
+components/ui/scroll-area.tsx
+components/ui/select.tsx
+components/ui/separator.tsx
+components/ui/sheet.tsx
+components/ui/skeleton.tsx
+components/ui/slider.tsx
+components/ui/sonner.tsx
+components/ui/switch.tsx
+components/ui/table.tsx
+components/ui/tabs.tsx
+components/ui/task-card.tsx
+components/ui/textarea.tsx
+components/ui/toast.tsx
+components/ui/toaster.tsx
+components/ui/toggle-group.tsx
+components/ui/toggle.tsx
+components/ui/tooltip.tsx
+components/ui/use-toast.ts
+hooks/
+hooks/use-toast.ts
+lib/
+lib/apify-service.ts
+lib/auth.ts
+lib/db.ts
+lib/types.ts
+lib/user-service.ts
+lib/utils.ts
+prisma/
+prisma/schema.prisma
+scripts/
+scripts/seed.ts
+
+sent 765,561 bytes  received 2,273 bytes  1,535,668.00 bytes/sec
+total size is 756,666  speedup is 0.99
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+  ▲ Next.js 14.2.28
+  - Experiments (use with caution):
+    · outputFileTracingRoot
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/20) ...
+   Generating static pages (5/20) 
+   Generating static pages (10/20) 
+   Generating static pages (15/20) 
+ ✓ Generating static pages (20/20)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    514 B          87.7 kB
+├ ○ /_not-found                          873 B          88.1 kB
+├ ƒ /api/analytics                       0 B                0 B
+├ ƒ /api/auth/[...nextauth]              0 B                0 B
+├ ƒ /api/auth/signup                     0 B                0 B
+├ ƒ /api/documents                       0 B                0 B
+├ ƒ /api/outreach                        0 B                0 B
+├ ○ /api/profile                         0 B                0 B
+├ ƒ /api/prospects                       0 B                0 B
+├ ƒ /api/prospects/search                0 B                0 B
+├ ƒ /api/settings                        0 B                0 B
+├ ƒ /api/settings/apify-key              0 B                0 B
+├ ƒ /api/settings/apify-key/test         0 B                0 B
+├ ƒ /api/submissions                     0 B                0 B
+├ ƒ /api/team                            0 B                0 B
+├ ○ /auth/signin                         2.78 kB         117 kB
+├ ○ /auth/signup                         3.2 kB          118 kB
+├ ○ /dashboard                           3.37 kB         107 kB
+├ ○ /dashboard/analytics                 5.01 kB         127 kB
+├ ○ /dashboard/documents                 5.38 kB         127 kB
+├ ○ /dashboard/outreach                  3.28 kB         128 kB
+├ ○ /dashboard/prospects                 2.92 kB         124 kB
+├ ○ /dashboard/qualification             7.37 kB         105 kB
+├ ○ /dashboard/research                  7.92 kB         129 kB
+├ ○ /dashboard/settings                  5.93 kB         113 kB
+├ ○ /dashboard/submissions               3.8 kB          128 kB
+├ ○ /dashboard/team                      4.33 kB         126 kB
+└ ○ /profile-setup                       1.28 kB         105 kB
++ First Load JS shared by all            87.2 kB
+  ├ chunks/117-c3d3dc8c766243ed.js       31.6 kB
+  ├ chunks/fd9d1056-b6bd4111191f2b98.js  53.6 kB
+  └ other shared chunks (total)          1.96 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

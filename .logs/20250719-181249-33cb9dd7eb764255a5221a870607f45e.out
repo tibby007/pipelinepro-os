@@ -1,0 +1,87 @@
+  ▲ Next.js 14.2.28
+  - Local:        http://localhost:3000
+  - Environments: .env
+  - Experiments (use with caution):
+    · outputFileTracingRoot
+
+ ✓ Starting...
+ ✓ Ready in 1471ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1852ms (679 modules)
+ GET / 200 in 2260ms
+ ✓ Compiled in 446ms (347 modules)
+ GET / 200 in 37ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 796ms (574 modules)
+ GET /api/auth/session 200 in 1297ms
+ GET /api/auth/session 200 in 34ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 873ms (1060 modules)
+ GET / 200 in 69ms
+ GET / 200 in 28ms
+ GET /api/auth/session 200 in 36ms
+ GET /api/auth/session 200 in 20ms
+ GET / 200 in 29ms
+ GET / 200 in 37ms
+ GET / 200 in 26ms
+ GET / 200 in 27ms
+ GET / 200 in 27ms
+ GET / 200 in 26ms
+ GET / 200 in 28ms
+ GET / 200 in 25ms
+ GET /api/auth/session 200 in 36ms
+ ○ Compiling /dashboard/research ...
+ ✓ Compiled /dashboard/research in 759ms (1111 modules)
+ ○ Compiling /api/prospects/search ...
+ ✓ Compiled /api/prospects/search in 900ms (869 modules)
+API: Starting healthcare business search with criteria: { location: 'Atlanta GA', businessType: 'all', radius: 25 }
+Starting Apify search with criteria: { location: 'Atlanta GA', businessType: 'all', radius: 25 }
+Search query: healthcare near Atlanta GA
+Running Apify actor with input: {
+  searchStringsArray: [ 'healthcare near Atlanta GA' ],
+  maxCrawledPlacesPerSearch: 20,
+  language: 'en',
+  country: 'us',
+  includeHistogram: false,
+  includeOpeningHours: false,
+  includeImages: false,
+  exportPlaceUrls: false,
+  additionalInfo: false,
+  maxReviews: 0,
+  maxImages: 0,
+  deeperCityScrape: false
+}
+API: Found 2 businesses
+ GET /api/prospects/search?location=Atlanta+GA&businessType=all&radius=25 200 in 1410ms
+ GET / 200 in 69ms
+ GET / 200 in 28ms
+ GET / 200 in 25ms
+ GET / 200 in 26ms
+ GET / 200 in 23ms
+ GET /api/auth/session 200 in 35ms
+ GET /api/auth/session 200 in 20ms
+ ✓ Compiled /dashboard in 221ms (874 modules)
+ GET / 200 in 39ms
+ GET / 200 in 25ms
+ GET /api/auth/session 200 in 35ms
+ GET /api/auth/session 200 in 24ms
+ GET /api/auth/session 200 in 33ms
+ GET / 200 in 27ms
+ GET /api/auth/session 200 in 27ms
+ GET / 200 in 25ms
+ ✓ Compiled in 762ms (448 modules)
+ ✓ Compiled in 251ms (448 modules)
+ ✓ Compiled in 350ms (448 modules)
+ ✓ Compiled in 477ms (448 modules)
+ ✓ Compiled in 321ms (448 modules)
+ ✓ Compiled in 276ms (448 modules)
+ ✓ Compiled in 340ms (448 modules)
+ ✓ Compiled in 366ms (448 modules)
+ ✓ Compiled in 266ms (448 modules)
+ ✓ Compiled in 271ms (448 modules)
+   Reload env: .env
+ ✓ Compiled in 185ms (436 modules)
+ ✓ Compiled in 333ms (448 modules)
+ ✓ Compiled in 245ms (448 modules)
+ ✓ Compiled in 272ms (448 modules)
+[?25h

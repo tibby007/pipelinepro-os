@@ -1,0 +1,15 @@
+➤ YN0000: · Yarn 4.9.2
+➤ YN0000: ┌ Resolution step
+➤ YN0085: │ + @floating-ui/react@npm:0.26.0, @headlessui/react@npm:1.7.18, @hookform/resolvers@npm:3.9.0, @next-auth/prisma-adapter@npm:1.0.7, and 1165 more.
+➤ YN0000: └ Completed in 11s 356ms
+➤ YN0000: ┌ Post-resolution validation
+➤ YN0060: │ @typescript-eslint/parser is listed by your project with version 7.0.0 (p6cb6c), which doesn't satisfy what @typescript-eslint/eslint-plugin requests (^6.0.0-alpha).
+➤ YN0060: │ eslint is listed by your project with version 9.24.0 (pe6e00), which doesn't satisfy what @typescript-eslint/eslint-plugin and other dependencies request (^8.57.0).
+➤ YN0002: │ app@workspace:. doesn't provide prettier (pd88b5), requested by eslint-plugin-prettier.
+➤ YN0086: │ Some peer dependencies are incorrectly met by your project; run yarn explain peer-requirements <hash> for details, where <hash> is the six-letter p-prefixed code.
+➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.
+➤ YN0000: └ Completed
+➤ YN0000: ┌ Fetch step
+➤ YN0013: │ 14 packages were added to the project (+ 61.21 MiB).
+➤ YN0000: └ Completed in 3s 594ms
+➤ YN0000: ┌ Link step

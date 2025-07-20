@@ -1,0 +1,30 @@
+Failed to compile.
+
+./app/dashboard/research/page.tsx
+Error: 
+  [31mx[0m Expected a semicolon
+     ,-[[36;1;4m/home/ubuntu/ccc_healthcare_pipeline/app/app/dashboard/research/page.tsx[0m:408:1]
+ [2m408[0m |       )}
+ [2m409[0m |     </div>
+ [2m410[0m |   );
+ [2m411[0m | }
+     : [31;1m ^[0m
+     `----
+
+  [31mx[0m Expected '}', got '<eof>'
+     ,-[[36;1;4m/home/ubuntu/ccc_healthcare_pipeline/app/app/dashboard/research/page.tsx[0m:408:1]
+ [2m408[0m |       )}
+ [2m409[0m |     </div>
+ [2m410[0m |   );
+ [2m411[0m | }
+     : [31;1m^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/dashboard/research/page.tsx
+
+
+> Build failed because of webpack errors

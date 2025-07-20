@@ -1,0 +1,2 @@
+app/dashboard/research/page.tsx(412,1): error TS1472: 'catch' or 'finally' expected.
+exit_code=1
