@@ -511,6 +511,301 @@ function calculateQualificationScore(business: ApifyBusiness, businessType: stri
   return { indicators, score, isQualified };
 }
 
+// NEW MULTI-ACTOR APPROACH: Different actors for different industries
+async function searchBusinessesByIndustry(
+  industry: string,
+  location: string,
+  apifyClient: any
+): Promise<any[]> {
+  
+  // Get the appropriate actor configuration based on industry
+  const getActorConfig = () => {
+    switch (industry) {
+      case 'RESTAURANT_FOOD_SERVICE':
+        return {
+          actorId: 'apify/google-maps-scraper',
+          input: {
+            queries: [
+              `restaurants in ${location}`,
+              `cafes in ${location}`,
+              `food service in ${location}`
+            ],
+            maxPlacesPerQuery: 10, // 30 total across 3 queries
+            searchMode: 'PLACES_AND_REVIEWS',
+            includeWebsite: true,
+            includePhoneNumber: true,
+            skipClosedPlaces: true,
+            placeMinimumRating: 0,
+            language: 'en',
+            countryCode: 'US',
+          }
+        };
+      
+      case 'HEALTHCARE':
+        return {
+          actorId: 'apify/google-maps-scraper',
+          input: {
+            queries: [
+              `medical clinics in ${location}`,
+              `doctors offices in ${location}`,
+              `dental offices in ${location}`
+            ],
+            maxPlacesPerQuery: 10,
+            searchMode: 'PLACES_AND_REVIEWS',
+            includeWebsite: true,
+            includePhoneNumber: true,
+            language: 'en',
+            countryCode: 'US',
+          }
+        };
+      
+      case 'BEAUTY_WELLNESS':
+        return {
+          actorId: 'apify/google-maps-scraper',
+          input: {
+            queries: [
+              `beauty salons in ${location}`,
+              `spas in ${location}`,
+              `nail salons in ${location}`
+            ],
+            maxPlacesPerQuery: 10,
+            searchMode: 'PLACES_AND_REVIEWS',
+            includeWebsite: true,
+            includePhoneNumber: true,
+            language: 'en',
+            countryCode: 'US',
+          }
+        };
+      
+      case 'AUTOMOTIVE_SERVICES':
+        return {
+          actorId: 'apify/google-maps-scraper',
+          input: {
+            queries: [
+              `auto repair shops in ${location}`,
+              `car mechanics in ${location}`,
+              `tire shops in ${location}`
+            ],
+            maxPlacesPerQuery: 10,
+            searchMode: 'PLACES_AND_REVIEWS',
+            includeWebsite: true,
+            includePhoneNumber: true,
+            language: 'en',
+            countryCode: 'US',
+          }
+        };
+      
+      case 'FITNESS_RECREATION':
+        return {
+          actorId: 'apify/google-maps-scraper',
+          input: {
+            queries: [
+              `gyms in ${location}`,
+              `fitness centers in ${location}`,
+              `yoga studios in ${location}`
+            ],
+            maxPlacesPerQuery: 10,
+            searchMode: 'PLACES_AND_REVIEWS',
+            includeWebsite: true,
+            includePhoneNumber: true,
+            language: 'en',
+            countryCode: 'US',
+          }
+        };
+      
+      case 'PET_SERVICES':
+        return {
+          actorId: 'apify/google-maps-scraper',
+          input: {
+            queries: [
+              `pet stores in ${location}`,
+              `veterinarians in ${location}`,
+              `pet grooming in ${location}`
+            ],
+            maxPlacesPerQuery: 10,
+            searchMode: 'PLACES_AND_REVIEWS',
+            includeWebsite: true,
+            includePhoneNumber: true,
+            language: 'en',
+            countryCode: 'US',
+          }
+        };
+      
+      case 'SPECIALTY_RETAIL':
+        // For retail, we might want to use a different approach
+        return {
+          actorId: 'compass/crawler-google-places',
+          input: {
+            searchStringsArray: [
+              `specialty retail stores ${location}`,
+              `boutique shops ${location}`,
+              `local retailers ${location}`
+            ],
+            maxCrawledPlacesPerSearch: 10,
+            language: 'en',
+            country: 'us',
+            includeHistogram: false,
+            includeOpeningHours: false,
+            includeImages: false,
+            skipClosedPlaces: true,
+          }
+        };
+      
+      case 'BUSINESS_SERVICES':
+        return {
+          actorId: 'apify/google-maps-scraper',
+          input: {
+            queries: [
+              `business services in ${location}`,
+              `consulting firms in ${location}`,
+              `professional services in ${location}`
+            ],
+            maxPlacesPerQuery: 10,
+            searchMode: 'PLACES_AND_REVIEWS',
+            includeWebsite: true,
+            includePhoneNumber: true,
+            language: 'en',
+            countryCode: 'US',
+          }
+        };
+      
+      default:
+        // Fallback to original actor
+        return {
+          actorId: 'compass/crawler-google-places',
+          input: {
+            searchStringsArray: [`${industry.toLowerCase().replace(/_/g, ' ')} in ${location}`],
+            maxCrawledPlacesPerSearch: 30,
+            language: 'en',
+            country: 'us',
+          }
+        };
+    }
+  };
+
+  try {
+    const config = getActorConfig();
+    console.log(`Using actor ${config.actorId} for ${industry} search in ${location}`);
+    
+    const run = await apifyClient.actor(config.actorId).call(config.input, {
+      timeout: 300, // 5 minutes
+    });
+
+    // Handle different response formats from different actors
+    let results = [];
+    
+    if (config.actorId === 'apify/google-maps-scraper') {
+      // Google Maps Scraper returns data in 'items' array
+      results = (run.items || []).map((place: any) => ({
+        title: place.title,
+        address: place.address,
+        phoneNumber: place.phoneNumber,
+        website: place.website,
+        categoryName: place.categoryName || place.category,
+        totalScore: place.rating,
+        reviewsCount: place.reviewsCount,
+        location: place.location,
+        placeId: place.placeId,
+        // Additional fields from Google Maps Scraper
+        priceLevel: place.priceLevel,
+        permanently_closed: place.permanently_closed,
+        temporarily_closed: place.temporarily_closed,
+      }));
+    } else {
+      // Original crawler-google-places format
+      results = (run.items || []).map((place: any) => ({
+        title: place.title,
+        address: place.address,
+        phoneNumber: place.phoneNumber,
+        website: place.website,
+        categoryName: place.categoryName,
+        totalScore: place.totalScore,
+        reviewsCount: place.reviewsCount,
+        location: place.location,
+        placeId: place.placeId,
+      }));
+    }
+
+    // Filter out closed businesses
+    results = results.filter((place: any) => 
+      !place.permanently_closed && 
+      !place.temporarily_closed
+    );
+
+    console.log(`Found ${results.length} ${industry} businesses in ${location}`);
+    return results;
+
+  } catch (error) {
+    console.error(`Actor failed for ${industry}:`, error);
+    throw error;
+  }
+}
+
+// Industry-specific validation function
+function validateBusinessForIndustry(business: any, industry: string): boolean {
+  const industryKeywords: Record<string, string[]> = {
+    RESTAURANT_FOOD_SERVICE: ['restaurant', 'cafe', 'food', 'dining', 'bistro', 'eatery'],
+    HEALTHCARE: ['medical', 'clinic', 'doctor', 'dental', 'health', 'physician'],
+    BEAUTY_WELLNESS: ['salon', 'spa', 'beauty', 'nail', 'hair', 'wellness'],
+    AUTOMOTIVE_SERVICES: ['auto', 'car', 'mechanic', 'repair', 'tire', 'automotive'],
+    FITNESS_RECREATION: ['gym', 'fitness', 'yoga', 'sports', 'recreation', 'exercise'],
+    PET_SERVICES: ['pet', 'veterinary', 'animal', 'grooming', 'vet'],
+    SPECIALTY_RETAIL: ['store', 'shop', 'retail', 'boutique', 'merchant'],
+    BUSINESS_SERVICES: ['consulting', 'service', 'professional', 'business', 'office'],
+  };
+
+  const keywords = industryKeywords[industry] || [];
+  const businessText = `${business.title} ${business.categoryName}`.toLowerCase();
+  
+  return keywords.some((keyword: string) => businessText.includes(keyword));
+}
+
+// Location formatting function
+function formatLocationForSearch(location: string): string {
+  // Ensure location is properly formatted
+  // Remove extra spaces, add state if missing, etc.
+  location = location.trim();
+  
+  // If it's just a city name, try to add state
+  if (!location.includes(',')) {
+    // You might want to add logic to append state based on context
+    location = `${location}, USA`;
+  }
+  
+  return location;
+}
+
+// Retry logic for failed searches
+async function searchWithRetry(
+  industry: string,
+  location: string,
+  apifyClient: any,
+  maxRetries: number = 2
+): Promise<any[]> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const results = await searchBusinessesByIndustry(industry, location, apifyClient);
+      
+      if (results.length > 0) {
+        return results;
+      }
+      
+      // If no results, try with a broader location
+      if (attempt < maxRetries) {
+        location = formatLocationForSearch(location);
+        console.log(`Retry ${attempt + 1}: Searching with location: ${location}`);
+      }
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      console.log(`Attempt ${attempt + 1} failed, retrying...`);
+    }
+  }
+  
+  return [];
+}
+
 // COMPLETELY REWRITTEN: Industry-specific search query construction
 function buildPreciseSearchQuery(criteria: SearchCriteria): string {
   const { location, industryCategory } = criteria;
@@ -630,44 +925,16 @@ export async function searchBusinesses(
     console.log('Starting STRICT Apify search with criteria:', criteria);
     console.log('Target industry category:', criteria.industryCategory);
     
-    // Use new precise search query construction
-    const searchQuery = buildPreciseSearchQuery(criteria);
-    console.log('PRECISE Search query:', searchQuery);
+    // Use new multi-actor approach with retry logic
+    console.log(`Starting multi-actor search for ${criteria.industryCategory} in ${criteria.location}`);
     
-    // Run the Google Maps scraper
-    const input = {
-      searchStringsArray: [searchQuery],
-      maxCrawledPlacesPerSearch: 30, // Increased to get more candidates for filtering
-      language: 'en',
-      country: 'us',
-      includeHistogram: false,
-      includeOpeningHours: false,
-      includeImages: false,
-      exportPlaceUrls: false,
-      additionalInfo: false,
-      maxReviews: 0, // Don't scrape reviews to speed up
-      maxImages: 0,
-      deeperCityScrape: false,
-    };
-
-    console.log('Running Apify actor with input:', input);
+    const items = await searchWithRetry(
+      criteria.industryCategory as string,
+      criteria.location,
+      apifyClient
+    );
     
-    // Using a popular Google Maps scraper actor
-    const run = await apifyClient.actor('compass/crawler-google-places').call(input, {
-      timeout: 300, // 5 minutes timeout
-    });
-
-    console.log('Apify run completed:', run);
-
-    if (!run?.defaultDatasetId) {
-      throw new Error('No dataset returned from Apify');
-    }
-
-    // Get the results
-    const dataset = await apifyClient.dataset(run.defaultDatasetId);
-    const { items } = await dataset.listItems();
-    
-    console.log(`Retrieved ${items.length} items from Apify`);
+    console.log(`Multi-actor search completed: ${items.length} items retrieved`);
 
     if (!items || items.length === 0) {
       return {
