@@ -201,7 +201,7 @@ export default function ProfileSetupForm({ onSuccess, isInitialSetup = false }: 
         </div>
         <CardDescription>
           {isInitialSetup 
-            ? 'Set up your profile to personalize your CCC Healthcare Pipeline experience.'
+            ? 'Set up your profile to personalize your PipelinePro OS experience.'
             : 'Update your personal and business information.'
           }
         </CardDescription>

@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { searchHealthcareBusinesses, SearchCriteria } from '@/lib/apify-service';
+import { searchBusinesses, SearchCriteria } from '@/lib/apify-service';
 import { getCurrentUserEmail } from '@/lib/user-service';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const location = searchParams.get('location') || '';
-    const businessType = searchParams.get('businessType') || 'all';
+    const industryCategory = searchParams.get('industryCategory') || '';
+    const industryTypesParam = searchParams.get('industryTypes') || '';
     const radius = parseInt(searchParams.get('radius') || '25');
 
     // Validate required parameters
@@ -20,21 +21,28 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Parse industry types from comma-separated string
+    let industryTypes: string[] = [];
+    if (industryTypesParam) {
+      industryTypes = industryTypesParam.split(',').map(type => type.trim()).filter(Boolean);
+    }
+
     // Prepare search criteria
     const searchCriteria: SearchCriteria = {
       location: location.trim(),
-      businessType,
+      industryTypes,
+      industryCategory: industryCategory !== 'all' ? industryCategory : undefined,
       radius,
     };
 
-    console.log('API: Starting healthcare business search with criteria:', searchCriteria);
+    console.log('API: Starting multi-industry business search with criteria:', searchCriteria);
     
     // Get current user email dynamically
     const userEmail = await getCurrentUserEmail();
     console.log('API: Using user email:', userEmail);
 
-    // Use Apify to search for real healthcare businesses with user-specific API key
-    const searchResults = await searchHealthcareBusinesses(searchCriteria, userEmail);
+    // Use Apify to search for real businesses with user-specific API key
+    const searchResults = await searchBusinesses(searchCriteria, userEmail);
 
     console.log(`API: Found ${searchResults.businesses.length} businesses using ${searchResults.dataSource} data`);
 
@@ -51,14 +59,14 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error searching healthcare businesses:', error);
+    console.error('Error searching businesses:', error);
     
     // Return a more specific error message
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
     return NextResponse.json(
       { 
-        error: 'Failed to search healthcare businesses',
+        error: 'Failed to search businesses',
         details: errorMessage,
         fallback: true 
       },

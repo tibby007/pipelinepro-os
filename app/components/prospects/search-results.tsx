@@ -20,12 +20,13 @@ import {
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-interface HealthcareBusiness {
+interface Business {
   id: string;
   name: string;
   address: string;
   phone?: string;
   businessType: string;
+  industryCategory: string;
   estimatedRevenue: string;
   yearsInBusiness: string;
   employeeCount: string;
@@ -34,20 +35,21 @@ interface HealthcareBusiness {
     revenueQualified: boolean;
     experienceQualified: boolean;
     locationQualified: boolean;
-    businessTypeQualified: boolean;
+    industryQualified: boolean;
   };
   qualificationScore: number;
   isQualified: boolean;
 }
 
 interface SearchResultsProps {
-  businesses: HealthcareBusiness[];
+  businesses: Business[];
   searchCriteria?: {
     location: string;
-    businessType: string;
+    industryTypes: string[];
+    industryCategory?: string;
     radius: number;
   };
-  onAddProspect: (business: HealthcareBusiness) => void;
+  onAddProspect: (business: Business) => void;
   dataSource?: string;
   message?: string;
 }
@@ -56,7 +58,7 @@ export function SearchResults({ businesses, searchCriteria, onAddProspect, dataS
   const [addingProspects, setAddingProspects] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
-  const handleAddProspect = async (business: HealthcareBusiness) => {
+  const handleAddProspect = async (business: Business) => {
     setAddingProspects(prev => new Set(prev).add(business.id));
     
     try {
@@ -109,10 +111,10 @@ export function SearchResults({ businesses, searchCriteria, onAddProspect, dataS
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                Found <span className="font-semibold">{businesses.length}</span> healthcare businesses
+                Found <span className="font-semibold">{businesses.length}</span> businesses
                 in <span className="font-semibold">{searchCriteria.location}</span>
-                {searchCriteria.businessType !== 'all' && (
-                  <> matching <span className="font-semibold">{searchCriteria.businessType}</span></>
+                {searchCriteria.industryCategory && (
+                  <> in <span className="font-semibold">{searchCriteria.industryCategory.replace('_', ' ').toLowerCase()}</span> industry</>
                 )}
               </div>
               <div className="flex items-center space-x-4 text-sm">
@@ -217,7 +219,7 @@ export function SearchResults({ businesses, searchCriteria, onAddProspect, dataS
                     ) : (
                       <XCircle className="h-4 w-4 text-red-500" />
                     )}
-                    <span className="text-sm">$17K+ Monthly Revenue</span>
+                    <span className="text-sm">Revenue Qualified</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     {business.qualificationIndicators.experienceQualified ? (
@@ -225,7 +227,7 @@ export function SearchResults({ businesses, searchCriteria, onAddProspect, dataS
                     ) : (
                       <XCircle className="h-4 w-4 text-red-500" />
                     )}
-                    <span className="text-sm">6+ Months Experience</span>
+                    <span className="text-sm">Experience Qualified</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     {business.qualificationIndicators.locationQualified ? (
@@ -236,12 +238,12 @@ export function SearchResults({ businesses, searchCriteria, onAddProspect, dataS
                     <span className="text-sm">US-Based Business</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {business.qualificationIndicators.businessTypeQualified ? (
+                    {business.qualificationIndicators.industryQualified ? (
                       <CheckCircle className="h-4 w-4 text-green-500" />
                     ) : (
                       <XCircle className="h-4 w-4 text-red-500" />
                     )}
-                    <span className="text-sm">Healthcare Business</span>
+                    <span className="text-sm">Industry Match</span>
                   </div>
                 </div>
               </div>

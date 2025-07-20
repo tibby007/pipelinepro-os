@@ -1,5 +1,5 @@
 
-// Core type definitions for CCC Healthcare Prospect Pipeline
+// Core type definitions for PipelinePro OS - Multi-Industry Prospect Pipeline
 
 export interface User {
   id: string;
@@ -20,7 +20,8 @@ export interface Prospect {
   city?: string;
   state?: string;
   zipCode?: string;
-  businessType: HealthcareType;
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
   monthlyRevenue?: number;
   yearsInBusiness?: number;
   employeeCount?: number;
@@ -38,7 +39,18 @@ export interface Prospect {
   updatedAt: Date;
 }
 
-export type HealthcareType = 
+export type IndustryCategory = 
+  | 'HEALTHCARE'
+  | 'RESTAURANT_FOOD_SERVICE'
+  | 'BEAUTY_WELLNESS'
+  | 'AUTOMOTIVE_SERVICES'
+  | 'FITNESS_RECREATION'
+  | 'PET_SERVICES'
+  | 'SPECIALTY_RETAIL'
+  | 'BUSINESS_SERVICES';
+
+export type IndustryType = 
+  // Healthcare
   | 'MEDICAL_OFFICE'
   | 'DENTAL_PRACTICE'
   | 'VETERINARY_CLINIC'
@@ -49,6 +61,78 @@ export type HealthcareType =
   | 'LABORATORY'
   | 'PHARMACY'
   | 'SPECIALTY_CLINIC'
+  | 'CHIROPRACTIC'
+  | 'OPTOMETRY'
+  | 'DERMATOLOGY'
+  // Restaurants & Food Service
+  | 'FAST_FOOD'
+  | 'CASUAL_DINING'
+  | 'FINE_DINING'
+  | 'COFFEE_SHOP'
+  | 'BAKERY'
+  | 'FOOD_TRUCK'
+  | 'CATERING'
+  | 'BAR_GRILL'
+  | 'PIZZA_RESTAURANT'
+  | 'ETHNIC_CUISINE'
+  // Beauty & Wellness
+  | 'HAIR_SALON'
+  | 'NAIL_SALON'
+  | 'SPA_WELLNESS'
+  | 'MASSAGE_THERAPY'
+  | 'TATTOO_PARLOR'
+  | 'BARBERSHOP'
+  | 'BEAUTY_SUPPLY'
+  | 'COSMETIC_SERVICES'
+  | 'TANNING_SALON'
+  // Automotive Services
+  | 'AUTO_REPAIR'
+  | 'OIL_CHANGE'
+  | 'TIRE_SHOP'
+  | 'CAR_WASH'
+  | 'AUTO_DETAILING'
+  | 'TRANSMISSION_REPAIR'
+  | 'BODY_SHOP'
+  | 'MUFFLER_SHOP'
+  | 'BRAKE_SERVICE'
+  // Fitness & Recreation
+  | 'GYM_FITNESS'
+  | 'YOGA_STUDIO'
+  | 'MARTIAL_ARTS'
+  | 'DANCE_STUDIO'
+  | 'PERSONAL_TRAINING'
+  | 'SPORTS_FACILITY'
+  | 'RECREATION_CENTER'
+  | 'CLIMBING_GYM'
+  // Pet Services
+  | 'VETERINARY_SERVICES'
+  | 'PET_GROOMING'
+  | 'PET_BOARDING'
+  | 'PET_TRAINING'
+  | 'PET_DAYCARE'
+  | 'PET_STORE'
+  | 'DOG_WALKING'
+  // Specialty Retail
+  | 'BOUTIQUE_CLOTHING'
+  | 'JEWELRY_STORE'
+  | 'ELECTRONICS_REPAIR'
+  | 'BIKE_SHOP'
+  | 'BOOKSTORE'
+  | 'GIFT_SHOP'
+  | 'SPORTING_GOODS'
+  | 'HOME_DECOR'
+  | 'ANTIQUE_SHOP'
+  // Business Services
+  | 'ACCOUNTING_SERVICES'
+  | 'LEGAL_SERVICES'
+  | 'MARKETING_AGENCY'
+  | 'CONSULTING'
+  | 'REAL_ESTATE'
+  | 'INSURANCE_AGENCY'
+  | 'FINANCIAL_PLANNING'
+  | 'IT_SERVICES'
+  | 'CLEANING_SERVICES'
+  | 'LANDSCAPING'
   | 'OTHER';
 
 export type ProspectStatus = 
@@ -220,7 +304,8 @@ export interface ProspectFormData {
   city?: string;
   state?: string;
   zipCode?: string;
-  businessType: HealthcareType;
+  businessType: IndustryType;
+  industryCategory: IndustryCategory;
   monthlyRevenue?: number;
   yearsInBusiness?: number;
   employeeCount?: number;
@@ -238,19 +323,113 @@ export interface OutreachFormData {
 }
 
 // Constants
-export const HEALTHCARE_TYPES = [
-  { value: 'MEDICAL_OFFICE', label: 'Medical Office' },
-  { value: 'DENTAL_PRACTICE', label: 'Dental Practice' },
-  { value: 'VETERINARY_CLINIC', label: 'Veterinary Clinic' },
-  { value: 'PHYSICAL_THERAPY', label: 'Physical Therapy' },
-  { value: 'MENTAL_HEALTH', label: 'Mental Health' },
-  { value: 'URGENT_CARE', label: 'Urgent Care' },
-  { value: 'MEDICAL_IMAGING', label: 'Medical Imaging' },
-  { value: 'LABORATORY', label: 'Laboratory' },
-  { value: 'PHARMACY', label: 'Pharmacy' },
-  { value: 'SPECIALTY_CLINIC', label: 'Specialty Clinic' },
-  { value: 'OTHER', label: 'Other' },
+export const INDUSTRY_CATEGORIES = [
+  { value: 'HEALTHCARE', label: 'Healthcare' },
+  { value: 'RESTAURANT_FOOD_SERVICE', label: 'Restaurants & Food Service' },
+  { value: 'BEAUTY_WELLNESS', label: 'Beauty & Wellness' },
+  { value: 'AUTOMOTIVE_SERVICES', label: 'Automotive Services' },
+  { value: 'FITNESS_RECREATION', label: 'Fitness & Recreation' },
+  { value: 'PET_SERVICES', label: 'Pet Services' },
+  { value: 'SPECIALTY_RETAIL', label: 'Specialty Retail' },
+  { value: 'BUSINESS_SERVICES', label: 'Business Services' },
 ] as const;
+
+export const INDUSTRY_TYPES = {
+  HEALTHCARE: [
+    { value: 'MEDICAL_OFFICE', label: 'Medical Office' },
+    { value: 'DENTAL_PRACTICE', label: 'Dental Practice' },
+    { value: 'VETERINARY_CLINIC', label: 'Veterinary Clinic' },
+    { value: 'PHYSICAL_THERAPY', label: 'Physical Therapy' },
+    { value: 'MENTAL_HEALTH', label: 'Mental Health' },
+    { value: 'URGENT_CARE', label: 'Urgent Care' },
+    { value: 'MEDICAL_IMAGING', label: 'Medical Imaging' },
+    { value: 'LABORATORY', label: 'Laboratory' },
+    { value: 'PHARMACY', label: 'Pharmacy' },
+    { value: 'SPECIALTY_CLINIC', label: 'Specialty Clinic' },
+    { value: 'CHIROPRACTIC', label: 'Chiropractic' },
+    { value: 'OPTOMETRY', label: 'Optometry' },
+    { value: 'DERMATOLOGY', label: 'Dermatology' },
+  ],
+  RESTAURANT_FOOD_SERVICE: [
+    { value: 'FAST_FOOD', label: 'Fast Food' },
+    { value: 'CASUAL_DINING', label: 'Casual Dining' },
+    { value: 'FINE_DINING', label: 'Fine Dining' },
+    { value: 'COFFEE_SHOP', label: 'Coffee Shop' },
+    { value: 'BAKERY', label: 'Bakery' },
+    { value: 'FOOD_TRUCK', label: 'Food Truck' },
+    { value: 'CATERING', label: 'Catering' },
+    { value: 'BAR_GRILL', label: 'Bar & Grill' },
+    { value: 'PIZZA_RESTAURANT', label: 'Pizza Restaurant' },
+    { value: 'ETHNIC_CUISINE', label: 'Ethnic Cuisine' },
+  ],
+  BEAUTY_WELLNESS: [
+    { value: 'HAIR_SALON', label: 'Hair Salon' },
+    { value: 'NAIL_SALON', label: 'Nail Salon' },
+    { value: 'SPA_WELLNESS', label: 'Spa & Wellness' },
+    { value: 'MASSAGE_THERAPY', label: 'Massage Therapy' },
+    { value: 'TATTOO_PARLOR', label: 'Tattoo Parlor' },
+    { value: 'BARBERSHOP', label: 'Barbershop' },
+    { value: 'BEAUTY_SUPPLY', label: 'Beauty Supply' },
+    { value: 'COSMETIC_SERVICES', label: 'Cosmetic Services' },
+    { value: 'TANNING_SALON', label: 'Tanning Salon' },
+  ],
+  AUTOMOTIVE_SERVICES: [
+    { value: 'AUTO_REPAIR', label: 'Auto Repair' },
+    { value: 'OIL_CHANGE', label: 'Oil Change' },
+    { value: 'TIRE_SHOP', label: 'Tire Shop' },
+    { value: 'CAR_WASH', label: 'Car Wash' },
+    { value: 'AUTO_DETAILING', label: 'Auto Detailing' },
+    { value: 'TRANSMISSION_REPAIR', label: 'Transmission Repair' },
+    { value: 'BODY_SHOP', label: 'Body Shop' },
+    { value: 'MUFFLER_SHOP', label: 'Muffler Shop' },
+    { value: 'BRAKE_SERVICE', label: 'Brake Service' },
+  ],
+  FITNESS_RECREATION: [
+    { value: 'GYM_FITNESS', label: 'Gym & Fitness' },
+    { value: 'YOGA_STUDIO', label: 'Yoga Studio' },
+    { value: 'MARTIAL_ARTS', label: 'Martial Arts' },
+    { value: 'DANCE_STUDIO', label: 'Dance Studio' },
+    { value: 'PERSONAL_TRAINING', label: 'Personal Training' },
+    { value: 'SPORTS_FACILITY', label: 'Sports Facility' },
+    { value: 'RECREATION_CENTER', label: 'Recreation Center' },
+    { value: 'CLIMBING_GYM', label: 'Climbing Gym' },
+  ],
+  PET_SERVICES: [
+    { value: 'VETERINARY_SERVICES', label: 'Veterinary Services' },
+    { value: 'PET_GROOMING', label: 'Pet Grooming' },
+    { value: 'PET_BOARDING', label: 'Pet Boarding' },
+    { value: 'PET_TRAINING', label: 'Pet Training' },
+    { value: 'PET_DAYCARE', label: 'Pet Daycare' },
+    { value: 'PET_STORE', label: 'Pet Store' },
+    { value: 'DOG_WALKING', label: 'Dog Walking' },
+  ],
+  SPECIALTY_RETAIL: [
+    { value: 'BOUTIQUE_CLOTHING', label: 'Boutique Clothing' },
+    { value: 'JEWELRY_STORE', label: 'Jewelry Store' },
+    { value: 'ELECTRONICS_REPAIR', label: 'Electronics Repair' },
+    { value: 'BIKE_SHOP', label: 'Bike Shop' },
+    { value: 'BOOKSTORE', label: 'Bookstore' },
+    { value: 'GIFT_SHOP', label: 'Gift Shop' },
+    { value: 'SPORTING_GOODS', label: 'Sporting Goods' },
+    { value: 'HOME_DECOR', label: 'Home Decor' },
+    { value: 'ANTIQUE_SHOP', label: 'Antique Shop' },
+  ],
+  BUSINESS_SERVICES: [
+    { value: 'ACCOUNTING_SERVICES', label: 'Accounting Services' },
+    { value: 'LEGAL_SERVICES', label: 'Legal Services' },
+    { value: 'MARKETING_AGENCY', label: 'Marketing Agency' },
+    { value: 'CONSULTING', label: 'Consulting' },
+    { value: 'REAL_ESTATE', label: 'Real Estate' },
+    { value: 'INSURANCE_AGENCY', label: 'Insurance Agency' },
+    { value: 'FINANCIAL_PLANNING', label: 'Financial Planning' },
+    { value: 'IT_SERVICES', label: 'IT Services' },
+    { value: 'CLEANING_SERVICES', label: 'Cleaning Services' },
+    { value: 'LANDSCAPING', label: 'Landscaping' },
+  ],
+} as const;
+
+// Flattened list of all industry types for easier use in components
+export const ALL_INDUSTRY_TYPES = Object.values(INDUSTRY_TYPES).flat();
 
 export const PROSPECT_STATUSES = [
   { value: 'NEW', label: 'New', color: 'bg-blue-100 text-blue-800' },

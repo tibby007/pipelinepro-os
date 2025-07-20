@@ -101,9 +101,9 @@ export function SignUpForm() {
             <UserPlus className="h-6 w-6 text-white" />
           </div>
         </div>
-        <CardTitle className="text-2xl text-center">Request CCC System Access</CardTitle>
+        <CardTitle className="text-2xl text-center">Request PipelinePro OS Access</CardTitle>
         <CardDescription className="text-center">
-          Create account for CCC's internal lending operations dashboard
+          Create account for the multi-industry prospect management platform
         </CardDescription>
       </CardHeader>
       <CardContent>

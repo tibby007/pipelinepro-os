@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
       {
         id: '1',
         prospectId: '1',
-        prospectName: 'Dr. Sarah Johnson',
-        businessName: 'Downtown Dental Practice',
+        prospectName: 'Alex Thompson',
+        businessName: 'Metro Business Solutions',
         lendingPartner: 'partner_a',
         requestedAmount: 250000,
         status: 'approved',
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       {
         id: '2',
         prospectId: '2',
-        prospectName: 'Dr. Michael Chen',
+        prospectName: 'Michael Chen',
         businessName: 'Westside Medical Group',
         lendingPartner: 'partner_b',
         requestedAmount: 180000,
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       {
         id: '3',
         prospectId: '3',
-        prospectName: 'Dr. Emily Rodriguez',
+        prospectName: 'Emily Rodriguez',
         businessName: 'Riverside Veterinary Clinic',
         lendingPartner: 'partner_e',
         requestedAmount: 320000,
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       {
         id: '4',
         prospectId: '4',
-        prospectName: 'Dr. James Wilson',
+        prospectName: 'James Wilson',
         businessName: 'Northside Physical Therapy',
         lendingPartner: 'partner_c',
         requestedAmount: 95000,
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
       {
         id: '5',
         prospectId: '5',
-        prospectName: 'Dr. Amanda Foster',
+        prospectName: 'Amanda Foster',
         businessName: 'Central Urgent Care',
         lendingPartner: 'partner_d',
         requestedAmount: 420000,

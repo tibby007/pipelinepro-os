@@ -98,8 +98,8 @@ export default function ProspectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">CCC Prospect Database</h1>
-          <p className="text-gray-600">Manage and track healthcare lending prospects</p>
+          <h1 className="text-2xl font-bold text-gray-900">PipelinePro OS Prospect Database</h1>
+          <p className="text-gray-600">Manage and track multi-industry business prospects</p>
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />
@@ -189,12 +189,14 @@ export default function ProspectsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="RESTAURANT">Restaurant</SelectItem>
+                <SelectItem value="BEAUTY_SALON">Beauty Salon</SelectItem>
+                <SelectItem value="AUTO_REPAIR">Auto Repair</SelectItem>
+                <SelectItem value="FITNESS_GYM">Fitness Gym</SelectItem>
+                <SelectItem value="PET_GROOMING">Pet Grooming</SelectItem>
+                <SelectItem value="RETAIL_STORE">Retail Store</SelectItem>
                 <SelectItem value="DENTAL_PRACTICE">Dental Practice</SelectItem>
-                <SelectItem value="MEDICAL_PRACTICE">Medical Practice</SelectItem>
-                <SelectItem value="VETERINARY_CLINIC">Veterinary Clinic</SelectItem>
-                <SelectItem value="PHYSICAL_THERAPY">Physical Therapy</SelectItem>
-                <SelectItem value="URGENT_CARE">Urgent Care</SelectItem>
-                <SelectItem value="SPECIALTY_CLINIC">Specialty Clinic</SelectItem>
+                <SelectItem value="CONSULTING">Consulting</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -211,7 +213,7 @@ export default function ProspectsPage() {
               <p className="text-gray-500 mb-4">
                 {searchTerm || statusFilter !== 'all' || businessTypeFilter !== 'all' 
                   ? 'Try adjusting your filters to see more results.'
-                  : 'Start building your prospect database by adding new healthcare businesses.'}
+                  : 'Start building your prospect database by adding new business prospects.'}
               </p>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="h-4 w-4 mr-2" />

@@ -80,7 +80,7 @@ export default function ProfileCompletionChecker({
             </div>
             <CardTitle>Profile Setup Required</CardTitle>
             <CardDescription>
-              Complete your profile to personalize your CCC Healthcare Pipeline experience and get the most out of the platform.
+              Complete your profile to personalize your PipelinePro OS experience and get the most out of the platform.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

@@ -54,28 +54,28 @@ const metrics = [
 const quickActions = [
   {
     title: 'Research Prospects',
-    description: 'Find healthcare businesses for CCC lending pipeline',
+    description: 'Find multi-industry businesses across all sectors',
     icon: Search,
     href: '/dashboard/research',
     color: 'bg-blue-500',
   },
   {
     title: 'Manage Prospects',
-    description: 'View and manage lending prospects in CCC database',
+    description: 'View and manage prospects across all industries',
     icon: Database,
     href: '/dashboard/prospects',
     color: 'bg-green-500',
   },
   {
     title: 'Manage Outreach',
-    description: 'View and manage loan officer outreach activities',
+    description: 'View and manage multi-industry outreach activities',
     icon: MessageSquare,
     href: '/dashboard/outreach',
     color: 'bg-purple-500',
   },
   {
     title: 'View Metrics',
-    description: 'Check CCC lending pipeline performance',
+    description: 'Check multi-industry pipeline performance',
     icon: BarChart3,
     href: '/dashboard/analytics',
     color: 'bg-orange-500',
@@ -85,25 +85,25 @@ const quickActions = [
 const recentActivity = [
   {
     type: 'prospect_added',
-    message: 'New prospect "Downtown Dental" added',
+    message: 'New prospect "Metro Auto Service" added',
     time: '2 hours ago',
     icon: Building2,
   },
   {
     type: 'email_sent',
-    message: 'Email sent to "Medical Associates"',
+    message: 'Email sent to "Elite Fitness Studio"',
     time: '4 hours ago',
     icon: MessageSquare,
   },
   {
     type: 'qualification_completed',
-    message: 'Qualification completed for "City Vet Clinic"',
+    message: 'Qualification completed for "Corner Café"',
     time: '6 hours ago',
     icon: CheckSquare,
   },
   {
     type: 'submission_sent',
-    message: 'Application submitted for "Wellness Center"',
+    message: 'Application submitted for "Beauty Salon Plus"',
     time: '1 day ago',
     icon: Send,
   },
@@ -115,23 +115,23 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
         <h1 className="text-2xl font-bold mb-2">
-          CCC Healthcare Pipeline Dashboard
+          PipelinePro OS Dashboard
         </h1>
         <p className="text-blue-100 mb-4">
-          CCC's internal operational dashboard for managing healthcare lending prospects and loan origination workflow.
+          Comprehensive multi-industry prospect management platform spanning 8+ business sectors.
         </p>
         <div className="flex items-center space-x-4 text-sm">
           <div className="flex items-center space-x-1">
             <Building2 className="h-4 w-4" />
-            <span>Healthcare Focus</span>
+            <span>8 Industry Categories</span>
           </div>
           <div className="flex items-center space-x-1">
             <DollarSign className="h-4 w-4" />
-            <span>$17K+ Monthly Revenue</span>
+            <span>Industry-Specific Criteria</span>
           </div>
           <div className="flex items-center space-x-1">
             <Users className="h-4 w-4" />
-            <span>6+ Months in Business</span>
+            <span>Tailored Qualification</span>
           </div>
         </div>
       </div>
@@ -169,7 +169,7 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>
-                Common loan officer tasks for CCC's healthcare lending pipeline management
+                Essential tasks for managing multi-industry prospect pipelines
               </CardDescription>
             </CardHeader>
             <CardContent>

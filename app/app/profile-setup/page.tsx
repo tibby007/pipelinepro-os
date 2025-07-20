@@ -99,10 +99,10 @@ export default function ProfileSetupPage() {
               <User className="h-8 w-8 text-blue-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome to CCC Healthcare Pipeline
+              Welcome to PipelinePro OS
             </h1>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Let's set up your profile to personalize your experience and make the most of your healthcare lending operations.
+              Let's set up your profile to personalize your experience and make the most of your multi-industry business operations.
             </p>
           </div>
         </div>

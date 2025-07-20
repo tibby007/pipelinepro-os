@@ -10,10 +10,10 @@ export function Header() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">
-            CCC Healthcare Pipeline
+            PipelinePro OS
           </h2>
           <p className="text-sm text-gray-500">
-            CCC lending operations dashboard - healthcare prospect pipeline
+            Multi-industry prospect management platform - comprehensive business pipeline
           </p>
         </div>
 

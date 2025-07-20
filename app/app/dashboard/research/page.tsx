@@ -16,12 +16,13 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
-interface HealthcareBusiness {
+interface Business {
   id: string;
   name: string;
   address: string;
   phone?: string;
   businessType: string;
+  industryCategory: string;
   estimatedRevenue: string;
   yearsInBusiness: string;
   employeeCount: string;
@@ -30,14 +31,14 @@ interface HealthcareBusiness {
     revenueQualified: boolean;
     experienceQualified: boolean;
     locationQualified: boolean;
-    businessTypeQualified: boolean;
+    industryQualified: boolean;
   };
   qualificationScore: number;
   isQualified: boolean;
 }
 
 interface SearchResult {
-  businesses: HealthcareBusiness[];
+  businesses: Business[];
   searchCriteria: SearchCriteria;
   totalResults: number;
   source?: string; // Legacy field for compatibility
@@ -56,13 +57,22 @@ export default function ResearchPage() {
     try {
       const params = new URLSearchParams({
         location: criteria.location,
-        businessType: criteria.businessType,
         radius: criteria.radius.toString(),
       });
 
+      // Add industry types as comma-separated string
+      if (criteria.industryTypes && criteria.industryTypes.length > 0) {
+        params.append('industryTypes', criteria.industryTypes.join(','));
+      }
+
+      // Add industry category if specified
+      if (criteria.industryCategory) {
+        params.append('industryCategory', criteria.industryCategory);
+      }
+
       toast({
         title: 'Searching...',
-        description: 'Finding healthcare businesses using live data from Apify',
+        description: 'Finding businesses across multiple industries using live data from Apify',
       });
 
       const response = await fetch(`/api/prospects/search?${params}`);
@@ -84,7 +94,9 @@ export default function ResearchPage() {
       // Add to search history
       setSearchHistory(prev => {
         const newHistory = [criteria, ...prev.filter(h => 
-          h.location !== criteria.location || h.businessType !== criteria.businessType
+          h.location !== criteria.location || 
+          JSON.stringify(h.industryTypes) !== JSON.stringify(criteria.industryTypes) ||
+          h.industryCategory !== criteria.industryCategory
         )].slice(0, 5);
         return newHistory;
       });
@@ -92,7 +104,7 @@ export default function ResearchPage() {
       const sourceText = data.data.dataSource === 'live' ? 'live data' : 'sample data';
       toast({
         title: 'Search completed',
-        description: data.data.message || `Found ${data.data.totalResults} healthcare businesses using ${sourceText}`,
+        description: data.data.message || `Found ${data.data.totalResults} businesses using ${sourceText}`,
       });
 
     } catch (error: any) {
@@ -107,7 +119,7 @@ export default function ResearchPage() {
     }
   };
 
-  const handleAddProspect = async (business: HealthcareBusiness) => {
+  const handleAddProspect = async (business: Business) => {
     try {
       // Parse the business data to match API expectations
       const [city, stateZip] = business.address.split(', ');
@@ -125,8 +137,9 @@ export default function ResearchPage() {
       const employeeMatch = business.employeeCount.match(/(\d+)/);
       const employeeCount = employeeMatch ? parseInt(employeeMatch[1]) : null;
 
-      // Map business type to enum value
+      // Map business type to enum value - expanded for all industries
       const businessTypeMap: Record<string, string> = {
+        // Healthcare
         'Medical Office': 'MEDICAL_OFFICE',
         'Dental Practice': 'DENTAL_PRACTICE',
         'Veterinary Clinic': 'VETERINARY_CLINIC',
@@ -137,6 +150,91 @@ export default function ResearchPage() {
         'Laboratory': 'LABORATORY',
         'Pharmacy': 'PHARMACY',
         'Specialty Clinic': 'SPECIALTY_CLINIC',
+        'Chiropractic': 'CHIROPRACTIC',
+        'Optometry': 'OPTOMETRY',
+        'Dermatology': 'DERMATOLOGY',
+        // Restaurants & Food Service
+        'Fast Food': 'FAST_FOOD',
+        'Casual Dining': 'CASUAL_DINING',
+        'Fine Dining': 'FINE_DINING',
+        'Coffee Shop': 'COFFEE_SHOP',
+        'Bakery': 'BAKERY',
+        'Food Truck': 'FOOD_TRUCK',
+        'Catering': 'CATERING',
+        'Bar & Grill': 'BAR_GRILL',
+        'Pizza Restaurant': 'PIZZA_RESTAURANT',
+        'Ethnic Cuisine': 'ETHNIC_CUISINE',
+        // Beauty & Wellness
+        'Hair Salon': 'HAIR_SALON',
+        'Nail Salon': 'NAIL_SALON',
+        'Spa & Wellness': 'SPA_WELLNESS',
+        'Massage Therapy': 'MASSAGE_THERAPY',
+        'Tattoo Parlor': 'TATTOO_PARLOR',
+        'Barbershop': 'BARBERSHOP',
+        'Beauty Supply': 'BEAUTY_SUPPLY',
+        'Cosmetic Services': 'COSMETIC_SERVICES',
+        'Tanning Salon': 'TANNING_SALON',
+        // Automotive Services
+        'Auto Repair': 'AUTO_REPAIR',
+        'Oil Change': 'OIL_CHANGE',
+        'Tire Shop': 'TIRE_SHOP',
+        'Car Wash': 'CAR_WASH',
+        'Auto Detailing': 'AUTO_DETAILING',
+        'Transmission Repair': 'TRANSMISSION_REPAIR',
+        'Body Shop': 'BODY_SHOP',
+        'Muffler Shop': 'MUFFLER_SHOP',
+        'Brake Service': 'BRAKE_SERVICE',
+        // Fitness & Recreation
+        'Gym & Fitness': 'GYM_FITNESS',
+        'Yoga Studio': 'YOGA_STUDIO',
+        'Martial Arts': 'MARTIAL_ARTS',
+        'Dance Studio': 'DANCE_STUDIO',
+        'Personal Training': 'PERSONAL_TRAINING',
+        'Sports Facility': 'SPORTS_FACILITY',
+        'Recreation Center': 'RECREATION_CENTER',
+        'Climbing Gym': 'CLIMBING_GYM',
+        // Pet Services
+        'Veterinary Services': 'VETERINARY_SERVICES',
+        'Pet Grooming': 'PET_GROOMING',
+        'Pet Boarding': 'PET_BOARDING',
+        'Pet Training': 'PET_TRAINING',
+        'Pet Daycare': 'PET_DAYCARE',
+        'Pet Store': 'PET_STORE',
+        'Dog Walking': 'DOG_WALKING',
+        // Specialty Retail
+        'Boutique Clothing': 'BOUTIQUE_CLOTHING',
+        'Jewelry Store': 'JEWELRY_STORE',
+        'Electronics Repair': 'ELECTRONICS_REPAIR',
+        'Bike Shop': 'BIKE_SHOP',
+        'Bookstore': 'BOOKSTORE',
+        'Gift Shop': 'GIFT_SHOP',
+        'Sporting Goods': 'SPORTING_GOODS',
+        'Home Decor': 'HOME_DECOR',
+        'Antique Shop': 'ANTIQUE_SHOP',
+        // Business Services
+        'Accounting Services': 'ACCOUNTING_SERVICES',
+        'Legal Services': 'LEGAL_SERVICES',
+        'Marketing Agency': 'MARKETING_AGENCY',
+        'Consulting': 'CONSULTING',
+        'Real Estate': 'REAL_ESTATE',
+        'Insurance Agency': 'INSURANCE_AGENCY',
+        'Financial Planning': 'FINANCIAL_PLANNING',
+        'IT Services': 'IT_SERVICES',
+        'Cleaning Services': 'CLEANING_SERVICES',
+        'Landscaping': 'LANDSCAPING',
+        'Other': 'OTHER',
+      };
+
+      // Map industry category to enum value
+      const industryCategoryMap: Record<string, string> = {
+        'HEALTHCARE': 'HEALTHCARE',
+        'RESTAURANT_FOOD_SERVICE': 'RESTAURANT_FOOD_SERVICE',
+        'BEAUTY_WELLNESS': 'BEAUTY_WELLNESS',
+        'AUTOMOTIVE_SERVICES': 'AUTOMOTIVE_SERVICES',
+        'FITNESS_RECREATION': 'FITNESS_RECREATION',
+        'PET_SERVICES': 'PET_SERVICES',
+        'SPECIALTY_RETAIL': 'SPECIALTY_RETAIL',
+        'BUSINESS_SERVICES': 'BUSINESS_SERVICES',
       };
 
       const payload = {
@@ -149,6 +247,7 @@ export default function ResearchPage() {
         state: state?.trim(),
         zipCode: zipCode?.trim(),
         businessType: businessTypeMap[business.businessType] || 'OTHER',
+        industryCategory: industryCategoryMap[business.industryCategory] || 'BUSINESS_SERVICES',
         monthlyRevenue,
         yearsInBusiness,
         employeeCount,
@@ -187,23 +286,23 @@ export default function ResearchPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">CCC Prospect Research</h1>
+          <h1 className="text-2xl font-bold text-gray-900">PipelinePro OS Research</h1>
           <p className="text-gray-600">
-            Find and qualify healthcare businesses for CCC's lending pipeline
+            Find and qualify businesses across 8+ industries for comprehensive prospect management
           </p>
         </div>
         <div className="flex items-center space-x-3 text-sm text-gray-500">
           <div className="flex items-center space-x-1">
             <Building2 className="h-4 w-4" />
-            <span>Healthcare Focus</span>
+            <span>8 Industry Categories</span>
           </div>
           <div className="flex items-center space-x-1">
             <TrendingUp className="h-4 w-4" />
-            <span>$17K+ Revenue</span>
+            <span>Industry-Specific Criteria</span>
           </div>
           <div className="flex items-center space-x-1">
             <Users className="h-4 w-4" />
-            <span>6+ Months Experience</span>
+            <span>Tailored Qualification</span>
           </div>
         </div>
       </div>
@@ -231,8 +330,8 @@ export default function ResearchPage() {
                 >
                   <MapPin className="h-3 w-3 mr-1" />
                   {criteria.location}
-                  {criteria.businessType !== 'all' && (
-                    <span className="ml-1">• {criteria.businessType}</span>
+                  {criteria.industryCategory && (
+                    <span className="ml-1">• {criteria.industryCategory.replace('_', ' ')}</span>
                   )}
                   <RefreshCw className="h-3 w-3 ml-1" />
                 </Button>
@@ -256,11 +355,11 @@ export default function ResearchPage() {
           <CardContent className="py-12 text-center">
             <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Start CCC Healthcare Lending Research
+              Start Multi-Industry Business Research
             </h3>
             <p className="text-gray-500 max-w-md mx-auto mb-4">
-              Enter a location above to search for real healthcare businesses using Apify's web scraping technology.
-              Find prospects with $17K+ monthly revenue and 6+ months operating history.
+              Enter a location above to search for real businesses across 8+ industries using Apify's web scraping technology.
+              Find prospects with industry-specific qualification criteria.
             </p>
             <div className="flex items-center justify-center space-x-4 text-sm text-green-600">
               <div className="flex items-center space-x-1">
@@ -269,7 +368,7 @@ export default function ResearchPage() {
               </div>
               <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span>Real-time Qualification</span>
+                <span>Industry-Specific Qualification</span>
               </div>
             </div>
           </CardContent>

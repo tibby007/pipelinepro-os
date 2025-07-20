@@ -6,8 +6,8 @@ import { Providers } from '@/components/providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "CCC Healthcare Prospect Pipeline",
-  description: "Comprehensive healthcare business prospect management system for Commercial Capital Connect",
+  title: "PipelinePro OS",
+  description: "Comprehensive multi-industry prospect management platform spanning 8+ business sectors with intelligent qualification and outreach tools",
 };
 
 export default function RootLayout({

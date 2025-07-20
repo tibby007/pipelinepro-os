@@ -1,4 +1,4 @@
-// CCC Healthcare Prospect Pipeline Schema
+// PipelinePro OS - Multi-Industry Prospect Pipeline Schema
 generator client {
     provider = "prisma-client-js"
     binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
@@ -77,6 +77,8 @@ model User {
   submissions            Submission[]
   createdEmailTemplates  EmailTemplate[]
   analyticsTracking      AnalyticsEvent[]
+  searchSessions         SearchSession[]
+  bulkOperations         BulkOperation[]
 }
 
 model VerificationToken {
@@ -98,7 +100,8 @@ model Prospect {
   city                  String?
   state                 String?
   zipCode               String?
-  businessType          HealthcareType
+  businessType          IndustryType
+  industryCategory      IndustryCategory
   monthlyRevenue        Int?              // in dollars
   yearsInBusiness       Float?
   employeeCount         Int?
@@ -109,6 +112,7 @@ model Prospect {
   notes                 String?           @db.Text
   tags                  String[]          @default([])
   source                String?           // Where prospect was found
+  searchSessionId       String?           // Link to search session that found this prospect
   assignedToId          String?
   lastContactDate       DateTime?
   nextFollowUpDate      DateTime?
@@ -117,6 +121,7 @@ model Prospect {
 
   // Relationships
   assignedTo            User?             @relation(fields: [assignedToId], references: [id])
+  searchSession         SearchSession?    @relation("SearchSessionProspects", fields: [searchSessionId], references: [id])
   outreachActivities    OutreachActivity[]
   qualifications        Qualification[]
   documents             Document[]
@@ -253,6 +258,69 @@ model AnalyticsEvent {
   user       User      @relation(fields: [userId], references: [id])
 }
 
+// Industry Configuration Models
+model IndustryConfig {
+  id                    String            @id @default(cuid())
+  industryType          IndustryType      @unique
+  industryCategory      IndustryCategory
+  displayName           String
+  minMonthlyRevenue     Int               // Minimum monthly revenue for qualification
+  maxMonthlyRevenue     Int               // Maximum monthly revenue range
+  minYearsInBusiness    Float             // Minimum years in business
+  searchTerms           String[]          // Keywords for prospect search
+  qualifyingQuestions   Json              // Industry-specific qualifying questions
+  valueProposition      String            @db.Text
+  seasonalPatterns      Json?             // Peak/slow seasons
+  crossSellOpportunities String[]         @default([])
+  averageLoanSize       Int?
+  conversionRate        Float?            // Industry average conversion rate
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+}
+
+model SearchSession {
+  id                    String       @id @default(cuid())
+  userId                String
+  searchQuery           String
+  industryFilters       IndustryType[]
+  locationFilters       String[]     @default([])
+  revenueMin            Int?
+  revenueMax            Int?
+  resultsCount          Int          @default(0)
+  dataSource            String       @default("mixed") // live, mock, mixed
+  isCompleted           Boolean      @default(false)
+  searchDuration        Int?         // in seconds
+  createdAt             DateTime     @default(now())
+  
+  // Relationships
+  user                  User         @relation(fields: [userId], references: [id])
+  prospects             Prospect[]   @relation("SearchSessionProspects")
+}
+
+model BulkOperation {
+  id                    String             @id @default(cuid())
+  userId                String
+  operationType         BulkOperationType
+  targetIndustries      IndustryType[]
+  targetLocations       String[]           @default([])
+  status                BulkOperationStatus @default(PENDING)
+  totalTargets          Int                @default(0)
+  completedTargets      Int                @default(0)
+  failedTargets         Int                @default(0)
+  parameters            Json?              // Operation-specific parameters
+  results               Json?              // Operation results
+  scheduledAt           DateTime?
+  startedAt             DateTime?
+  completedAt           DateTime?
+  errorMessage          String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  
+  // Relationships
+  user                  User               @relation(fields: [userId], references: [id])
+}
+
 // Enums
 enum UserRole {
   ADMIN
@@ -260,7 +328,19 @@ enum UserRole {
   USER
 }
 
-enum HealthcareType {
+enum IndustryCategory {
+  HEALTHCARE
+  RESTAURANT_FOOD_SERVICE
+  BEAUTY_WELLNESS
+  AUTOMOTIVE_SERVICES
+  FITNESS_RECREATION
+  PET_SERVICES
+  SPECIALTY_RETAIL
+  BUSINESS_SERVICES
+}
+
+enum IndustryType {
+  // Healthcare
   MEDICAL_OFFICE
   DENTAL_PRACTICE
   VETERINARY_CLINIC
@@ -271,6 +351,86 @@ enum HealthcareType {
   LABORATORY
   PHARMACY
   SPECIALTY_CLINIC
+  CHIROPRACTIC
+  OPTOMETRY
+  DERMATOLOGY
+  
+  // Restaurants & Food Service
+  FAST_FOOD
+  CASUAL_DINING
+  FINE_DINING
+  COFFEE_SHOP
+  BAKERY
+  FOOD_TRUCK
+  CATERING
+  BAR_GRILL
+  PIZZA_RESTAURANT
+  ETHNIC_CUISINE
+  
+  // Beauty & Wellness
+  HAIR_SALON
+  NAIL_SALON
+  SPA_WELLNESS
+  MASSAGE_THERAPY
+  TATTOO_PARLOR
+  BARBERSHOP
+  BEAUTY_SUPPLY
+  COSMETIC_SERVICES
+  TANNING_SALON
+  
+  // Automotive Services
+  AUTO_REPAIR
+  OIL_CHANGE
+  TIRE_SHOP
+  CAR_WASH
+  AUTO_DETAILING
+  TRANSMISSION_REPAIR
+  BODY_SHOP
+  MUFFLER_SHOP
+  BRAKE_SERVICE
+  
+  // Fitness & Recreation
+  GYM_FITNESS
+  YOGA_STUDIO
+  MARTIAL_ARTS
+  DANCE_STUDIO
+  PERSONAL_TRAINING
+  SPORTS_FACILITY
+  RECREATION_CENTER
+  CLIMBING_GYM
+  
+  // Pet Services
+  VETERINARY_SERVICES
+  PET_GROOMING
+  PET_BOARDING
+  PET_TRAINING
+  PET_DAYCARE
+  PET_STORE
+  DOG_WALKING
+  
+  // Specialty Retail
+  BOUTIQUE_CLOTHING
+  JEWELRY_STORE
+  ELECTRONICS_REPAIR
+  BIKE_SHOP
+  BOOKSTORE
+  GIFT_SHOP
+  SPORTING_GOODS
+  HOME_DECOR
+  ANTIQUE_SHOP
+  
+  // Business Services
+  ACCOUNTING_SERVICES
+  LEGAL_SERVICES
+  MARKETING_AGENCY
+  CONSULTING
+  REAL_ESTATE
+  INSURANCE_AGENCY
+  FINANCIAL_PLANNING
+  IT_SERVICES
+  CLEANING_SERVICES
+  LANDSCAPING
+  
   OTHER
 }
 
@@ -345,4 +505,22 @@ enum ApiKeyStatus {
   INVALID
   EXPIRED
   TESTING
+}
+
+enum BulkOperationType {
+  BULK_SEARCH
+  BULK_OUTREACH
+  BULK_QUALIFICATION
+  BULK_UPDATE
+  BULK_EXPORT
+  INDUSTRY_ANALYSIS
+}
+
+enum BulkOperationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+  PAUSED
 }

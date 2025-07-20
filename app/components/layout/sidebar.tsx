@@ -25,43 +25,43 @@ const navigation = [
     name: 'Research',
     href: '/dashboard/research',
     icon: Search,
-    description: 'Find healthcare lending prospects',
+    description: 'Find multi-industry prospects',
   },
   {
     name: 'Prospects',
     href: '/dashboard/prospects',
     icon: Database,
-    description: 'Manage CCC prospect database',
+    description: 'Manage PipelinePro prospect database',
   },
   {
     name: 'Outreach',
     href: '/dashboard/outreach',
     icon: MessageSquare,
-    description: 'Loan officer outreach tracking',
+    description: 'Multi-industry outreach tracking',
   },
   {
     name: 'Qualification',
     href: '/dashboard/qualification',
     icon: CheckSquare,
-    description: 'Lending qualification workflow',
+    description: 'Industry-specific qualification workflow',
   },
   {
     name: 'Documents',
     href: '/dashboard/documents',
     icon: FileText,
-    description: 'Loan application documents',
+    description: 'Business application documents',
   },
   {
     name: 'Submissions',
     href: '/dashboard/submissions',
     icon: Send,
-    description: 'Submit to lending partners',
+    description: 'Submit applications',
   },
   {
     name: 'Analytics',
     href: '/dashboard/analytics',
     icon: BarChart3,
-    description: 'CCC lending pipeline metrics',
+    description: 'Multi-industry pipeline metrics',
   },
   {
     name: 'Settings',
@@ -107,8 +107,8 @@ export function Sidebar({ userRole }: SidebarProps) {
                 <Building2 className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">CCC Pipeline</h1>
-                <p className="text-xs text-gray-500">Lending Operations</p>
+                <h1 className="text-lg font-semibold text-gray-900">PipelinePro OS</h1>
+                <p className="text-xs text-gray-500">Prospect Management</p>
               </div>
             </div>
           )}
@@ -164,10 +164,10 @@ export function Sidebar({ userRole }: SidebarProps) {
           <div className="p-4 border-t border-gray-200">
             <div className="bg-blue-50 p-3 rounded-lg">
               <div className="text-sm font-medium text-blue-900">
-                CCC Lending Criteria
+                Industry Qualification Criteria
               </div>
               <div className="text-xs text-blue-700 mt-1">
-                Healthcare businesses: $17K+ monthly revenue, 6+ months operating
+                Multi-industry businesses with tailored qualification criteria per industry
               </div>
             </div>
           </div>
