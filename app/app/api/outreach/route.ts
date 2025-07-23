@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +39,13 @@ export async function GET(request: NextRequest) {
       scheduledAt: activity?.scheduledAt?.toISOString(),
       completedAt: activity?.completedAt?.toISOString(),
       createdBy: activity?.userId,
-      createdAt: activity?.createdAt?.toISOString()
+      createdAt: activity?.createdAt?.toISOString(),
+      isAIGenerated: activity?.isAIGenerated,
+      aiModel: activity?.aiModel,
+      conversationId: activity?.conversationId,
+      sentAt: activity?.sentAt?.toISOString(),
+      openedAt: activity?.openedAt?.toISOString(),
+      respondedAt: activity?.respondedAt?.toISOString()
     })) || [];
 
     return NextResponse.json({ activities: transformedActivities });
@@ -61,11 +67,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const { userId, ...activityData } = body;
     
     const activity = await prisma.outreachActivity.create({
       data: {
-        ...body,
-        createdBy: session.user?.email || 'system'
+        ...activityData,
+        userId: session.user?.id || userId,
+        isAIGenerated: body.isAIGenerated || false,
+        aiModel: body.aiModel,
+        sentAt: body.sentAt ? new Date(body.sentAt) : undefined,
+        conversationId: body.conversationId
+      },
+      include: {
+        prospect: {
+          select: {
+            businessName: true,
+            contactName: true,
+            email: true
+          }
+        }
       }
     });
 

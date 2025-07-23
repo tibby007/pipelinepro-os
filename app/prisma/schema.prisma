@@ -145,6 +145,15 @@ model OutreachActivity {
   emailClicked    Boolean         @default(false)
   linkedInMessage String?         @db.Text
   phoneCallNotes  String?         @db.Text
+  
+  // AI Communication fields
+  isAIGenerated   Boolean         @default(false)
+  aiModel         String?         // Model used for generation
+  sentAt          DateTime?       // When message was actually sent
+  openedAt        DateTime?       // When recipient opened the message
+  respondedAt     DateTime?       // When recipient responded
+  conversationId  String?         // Group related messages
+  
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -449,6 +458,8 @@ enum OutreachType {
   PHONE
   LINKEDIN
   IN_PERSON
+  CHAT
+  SMS
   OTHER
 }
 
@@ -458,6 +469,7 @@ enum OutreachStatus {
   DELIVERED
   OPENED
   RESPONDED
+  RECEIVED
   FAILED
 }
 
