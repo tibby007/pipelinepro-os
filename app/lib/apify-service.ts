@@ -530,7 +530,7 @@ async function searchBusinessesByIndustry(
     switch (industry) {
       case 'RESTAURANT_FOOD_SERVICE':
         return {
-          actorId: 'compass/crawler-google-places',
+          actorId: 'compass~crawler-google-places',
           input: {
             searchStringsArray: [
               `restaurants in ${location}`
@@ -543,7 +543,7 @@ async function searchBusinessesByIndustry(
       
       case 'HEALTHCARE':
         return {
-          actorId: 'compass/crawler-google-places',
+          actorId: 'compass~crawler-google-places',
           input: {
             searchStringsArray: [
               `medical clinics in ${location}`
@@ -556,7 +556,7 @@ async function searchBusinessesByIndustry(
       
       case 'BEAUTY_WELLNESS':
         return {
-          actorId: 'compass/crawler-google-places',
+          actorId: 'compass~crawler-google-places',
           input: {
             searchStringsArray: [
               `beauty salons in ${location}`,
@@ -571,7 +571,7 @@ async function searchBusinessesByIndustry(
       
       case 'AUTOMOTIVE_SERVICES':
         return {
-          actorId: 'compass/crawler-google-places',
+          actorId: 'compass~crawler-google-places',
           input: {
             searchStringsArray: [
               `auto repair shops in ${location}`,
@@ -586,7 +586,7 @@ async function searchBusinessesByIndustry(
       
       case 'FITNESS_RECREATION':
         return {
-          actorId: 'compass/crawler-google-places',
+          actorId: 'compass~crawler-google-places',
           input: {
             searchStringsArray: [
               `gyms in ${location}`,
@@ -601,7 +601,7 @@ async function searchBusinessesByIndustry(
       
       case 'PET_SERVICES':
         return {
-          actorId: 'compass/crawler-google-places',
+          actorId: 'compass~crawler-google-places',
           input: {
             searchStringsArray: [
               `pet stores in ${location}`,
@@ -616,7 +616,7 @@ async function searchBusinessesByIndustry(
       
       case 'SPECIALTY_RETAIL':
         return {
-          actorId: 'compass/crawler-google-places',
+          actorId: 'compass~crawler-google-places',
           input: {
             searchStringsArray: [
               `specialty retail stores ${location}`,
@@ -647,7 +647,7 @@ async function searchBusinessesByIndustry(
       default:
         // Fallback to compass/crawler-google-places
         return {
-          actorId: 'compass/crawler-google-places',
+          actorId: 'compass~crawler-google-places',
           input: {
             searchStringsArray: [`${industry.toLowerCase().replace(/_/g, ' ')} in ${location}`],
             maxCrawledPlacesPerSearch: 30,
@@ -675,7 +675,7 @@ async function searchBusinessesByIndustry(
     
     console.log('🚀 Calling apifyClient.actor() with actorId:', config.actorId);
     const run = await apifyClient.actor(config.actorId).call(config.input, {
-      timeout: 10, // 10 seconds - very aggressive timeout for immediate results
+      timeout: 25, // 25 seconds - realistic timeout for actor completion
     });
     
     console.log('✅ Actor call successful, run status:', run?.status);
@@ -1018,9 +1018,9 @@ export async function searchBusinesses(
       apifyClient
     );
     
-    // Race the search against a very short timeout
+    // Race the search against a reasonable timeout
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('FORCED_TIMEOUT: Search taking too long, using mock data')), 8000); // 8 second hard limit
+      setTimeout(() => reject(new Error('FORCED_TIMEOUT: Search taking too long, using mock data')), 28000); // 28 second limit for actor to complete
     });
     
     const items = await Promise.race([searchPromise, timeoutPromise]) as any[];

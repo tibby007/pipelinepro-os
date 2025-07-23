@@ -77,7 +77,7 @@ export default function ResearchPage() {
 
       // Create AbortController for timeout handling
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 seconds timeout
+      const timeoutId = setTimeout(() => controller.abort(), 35000); // 35 seconds timeout to allow actor to complete
       
       const response = await fetch(`/api/prospects/search?${params}`, {
         signal: controller.signal,
