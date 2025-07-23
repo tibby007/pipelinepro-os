@@ -7,14 +7,18 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    console.log('🌐 API ROUTE: Starting business search request');
     const { searchParams } = new URL(req.url);
     const location = searchParams.get('location') || '';
     const industryCategory = searchParams.get('industryCategory') || '';
     const industryTypesParam = searchParams.get('industryTypes') || '';
     const radius = parseInt(searchParams.get('radius') || '25');
 
+    console.log('📝 API ROUTE: Search parameters:', { location, industryCategory, industryTypesParam, radius });
+
     // Validate required parameters
     if (!location?.trim()) {
+      console.log('❌ API ROUTE: Location validation failed');
       return NextResponse.json(
         { error: 'Location is required' },
         { status: 400 }
@@ -35,14 +39,16 @@ export async function GET(req: NextRequest) {
       radius,
     };
 
-    console.log('API: Starting multi-industry business search with criteria:', searchCriteria);
+    console.log('🔍 API ROUTE: Starting multi-industry business search with criteria:', searchCriteria);
     
     // Get current user email dynamically
     const userEmail = await getCurrentUserEmail();
-    console.log('API: Using user email:', userEmail);
+    console.log('👤 API ROUTE: Using user email:', userEmail);
 
+    console.log('⚡ API ROUTE: Calling searchBusinesses function...');
     // Use Apify to search for real businesses with user-specific API key
     const searchResults = await searchBusinesses(searchCriteria, userEmail);
+    console.log('✅ API ROUTE: searchBusinesses completed, dataSource:', searchResults.dataSource);
 
     console.log(`API: Found ${searchResults.businesses.length} businesses using ${searchResults.dataSource} data`);
 

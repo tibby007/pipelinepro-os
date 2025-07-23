@@ -90,6 +90,13 @@ export interface Business {
   };
   qualificationScore: number;
   isQualified: boolean;
+  // Apollo-specific enriched contact data
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  jobTitle?: string;
+  linkedinUrl?: string;
+  companySize?: string;
 }
 
 // COMPLETELY REWRITTEN: Industry-specific search keyword mapping
@@ -523,116 +530,95 @@ async function searchBusinessesByIndustry(
     switch (industry) {
       case 'RESTAURANT_FOOD_SERVICE':
         return {
-          actorId: 'apify/google-maps-scraper',
+          actorId: 'compass/crawler-google-places',
           input: {
-            queries: [
+            searchStringsArray: [
               `restaurants in ${location}`,
               `cafes in ${location}`,
               `food service in ${location}`
             ],
-            maxPlacesPerQuery: 10, // 30 total across 3 queries
-            searchMode: 'PLACES_AND_REVIEWS',
-            includeWebsite: true,
-            includePhoneNumber: true,
-            skipClosedPlaces: true,
-            placeMinimumRating: 0,
+            maxCrawledPlacesPerSearch: 10,
             language: 'en',
-            countryCode: 'US',
+            country: 'us',
           }
         };
       
       case 'HEALTHCARE':
         return {
-          actorId: 'apify/google-maps-scraper',
+          actorId: 'compass/crawler-google-places',
           input: {
-            queries: [
+            searchStringsArray: [
               `medical clinics in ${location}`,
               `doctors offices in ${location}`,
               `dental offices in ${location}`
             ],
-            maxPlacesPerQuery: 10,
-            searchMode: 'PLACES_AND_REVIEWS',
-            includeWebsite: true,
-            includePhoneNumber: true,
+            maxCrawledPlacesPerSearch: 10,
             language: 'en',
-            countryCode: 'US',
+            country: 'us',
           }
         };
       
       case 'BEAUTY_WELLNESS':
         return {
-          actorId: 'apify/google-maps-scraper',
+          actorId: 'compass/crawler-google-places',
           input: {
-            queries: [
+            searchStringsArray: [
               `beauty salons in ${location}`,
               `spas in ${location}`,
               `nail salons in ${location}`
             ],
-            maxPlacesPerQuery: 10,
-            searchMode: 'PLACES_AND_REVIEWS',
-            includeWebsite: true,
-            includePhoneNumber: true,
+            maxCrawledPlacesPerSearch: 10,
             language: 'en',
-            countryCode: 'US',
+            country: 'us',
           }
         };
       
       case 'AUTOMOTIVE_SERVICES':
         return {
-          actorId: 'apify/google-maps-scraper',
+          actorId: 'compass/crawler-google-places',
           input: {
-            queries: [
+            searchStringsArray: [
               `auto repair shops in ${location}`,
               `car mechanics in ${location}`,
               `tire shops in ${location}`
             ],
-            maxPlacesPerQuery: 10,
-            searchMode: 'PLACES_AND_REVIEWS',
-            includeWebsite: true,
-            includePhoneNumber: true,
+            maxCrawledPlacesPerSearch: 10,
             language: 'en',
-            countryCode: 'US',
+            country: 'us',
           }
         };
       
       case 'FITNESS_RECREATION':
         return {
-          actorId: 'apify/google-maps-scraper',
+          actorId: 'compass/crawler-google-places',
           input: {
-            queries: [
+            searchStringsArray: [
               `gyms in ${location}`,
               `fitness centers in ${location}`,
               `yoga studios in ${location}`
             ],
-            maxPlacesPerQuery: 10,
-            searchMode: 'PLACES_AND_REVIEWS',
-            includeWebsite: true,
-            includePhoneNumber: true,
+            maxCrawledPlacesPerSearch: 10,
             language: 'en',
-            countryCode: 'US',
+            country: 'us',
           }
         };
       
       case 'PET_SERVICES':
         return {
-          actorId: 'apify/google-maps-scraper',
+          actorId: 'compass/crawler-google-places',
           input: {
-            queries: [
+            searchStringsArray: [
               `pet stores in ${location}`,
               `veterinarians in ${location}`,
               `pet grooming in ${location}`
             ],
-            maxPlacesPerQuery: 10,
-            searchMode: 'PLACES_AND_REVIEWS',
-            includeWebsite: true,
-            includePhoneNumber: true,
+            maxCrawledPlacesPerSearch: 10,
             language: 'en',
-            countryCode: 'US',
+            country: 'us',
           }
         };
       
       case 'SPECIALTY_RETAIL':
-        // For retail, we might want to use a different approach
         return {
           actorId: 'compass/crawler-google-places',
           input: {
@@ -644,33 +630,26 @@ async function searchBusinessesByIndustry(
             maxCrawledPlacesPerSearch: 10,
             language: 'en',
             country: 'us',
-            includeHistogram: false,
-            includeOpeningHours: false,
-            includeImages: false,
-            skipClosedPlaces: true,
           }
         };
       
       case 'BUSINESS_SERVICES':
+        // Use Apollo scraper for high-quality B2B leads with verified emails and phones
         return {
-          actorId: 'apify/google-maps-scraper',
+          actorId: 'code_crafter/apollo-io-scraper',
           input: {
-            queries: [
-              `business services in ${location}`,
-              `consulting firms in ${location}`,
-              `professional services in ${location}`
-            ],
-            maxPlacesPerQuery: 10,
-            searchMode: 'PLACES_AND_REVIEWS',
-            includeWebsite: true,
-            includePhoneNumber: true,
-            language: 'en',
-            countryCode: 'US',
+            searchUrl: `https://app.apollo.io/#/people?finderViewId=5b6dfc6273f47b30016d12d9&prospectListId=&locationNames[]=${encodeURIComponent(location)}&organizationIndustryTagIds[]=business%20services&page=1`,
+            maxResults: 50, // Apollo can handle more results with better quality
+            revealPhoneNumbers: true, // Get verified phone numbers
+            enrichData: true, // Get additional contact info
+            includeEmails: true,
+            includePhoneNumbers: true,
+            includeLinkedInProfiles: true,
           }
         };
       
       default:
-        // Fallback to original actor
+        // Fallback to compass/crawler-google-places
         return {
           actorId: 'compass/crawler-google-places',
           input: {
@@ -685,48 +664,126 @@ async function searchBusinessesByIndustry(
 
   try {
     const config = getActorConfig();
-    console.log(`Using actor ${config.actorId} for ${industry} search in ${location}`);
-    console.log('Actor input:', JSON.stringify(config.input, null, 2));
+    console.log(`🎯 ATTEMPTING TO USE ACTOR: "${config.actorId}" for ${industry} search in ${location}`);
+    console.log('🔧 Actor input configuration:', JSON.stringify(config.input, null, 2));
     
+    // First, let's test if we can access the actor at all
+    console.log('🔍 Testing actor accessibility...');
+    try {
+      const actorInfo = await apifyClient.actor(config.actorId).get();
+      console.log('✅ Actor is accessible:', actorInfo?.name);
+    } catch (actorError) {
+      console.error('❌ Actor access test failed:', actorError);
+      throw new Error(`Actor "${config.actorId}" is not accessible with your API key: ${actorError instanceof Error ? actorError.message : 'Unknown error'}`);
+    }
+    
+    console.log('🚀 Calling apifyClient.actor() with actorId:', config.actorId);
     const run = await apifyClient.actor(config.actorId).call(config.input, {
       timeout: 300, // 5 minutes
     });
+    
+    console.log('✅ Actor call successful, run status:', run?.status);
 
     console.log('Apify run completed:', run?.status);
 
-    // Handle different response formats from different actors
+    // Handle different response formats based on actor type
     let results = [];
     
-    if (config.actorId === 'apify/google-maps-scraper') {
-      // Google Maps Scraper returns data in 'items' array
-      results = (run.items || []).map((place: any) => ({
-        title: place.title,
-        address: place.address,
-        phoneNumber: place.phoneNumber,
-        website: place.website,
-        categoryName: place.categoryName || place.category,
-        totalScore: place.rating,
-        reviewsCount: place.reviewsCount,
-        location: place.location,
-        placeId: place.placeId,
-        // Additional fields from Google Maps Scraper
-        priceLevel: place.priceLevel,
-        permanently_closed: place.permanently_closed,
-        temporarily_closed: place.temporarily_closed,
+    if (config.actorId === 'compass/crawler-google-places') {
+      // Compass Google Places Crawler returns data from dataset
+      if (run.defaultDatasetId) {
+        console.log('Fetching results from dataset:', run.defaultDatasetId);
+        const dataset = await apifyClient.dataset(run.defaultDatasetId).listItems();
+        results = (dataset.items || []).filter((place: any) => {
+          // Filter out closed businesses
+          return !place.permanently_closed && !place.temporarily_closed;
+        }).map((place: any) => ({
+          title: place.title,
+          address: place.address,
+          phoneNumber: place.phoneNumber,
+          website: place.website,
+          categoryName: place.categoryName,
+          totalScore: place.totalScore || place.rating,
+          reviewsCount: place.reviewsCount,
+          location: place.location,
+          placeId: place.placeId,
+          openingHours: place.openingHours,
+          description: place.description,
+          imageUrl: place.imageUrl,
+        }));
+      } else {
+        // Fallback to run.items for compass actor
+        results = (run.items || []).filter((place: any) => {
+          return !place.permanently_closed && !place.temporarily_closed;
+        }).map((place: any) => ({
+          title: place.title,
+          address: place.address,
+          phoneNumber: place.phoneNumber,
+          website: place.website,
+          categoryName: place.categoryName,
+          totalScore: place.totalScore || place.rating,
+          reviewsCount: place.reviewsCount,
+          location: place.location,
+          placeId: place.placeId,
+        }));
+      }
+    } else if (config.actorId === 'code_crafter/apollo-io-scraper') {
+      // Apollo Scraper format for high-quality B2B leads with verified contacts
+      results = (run.items || []).map((lead: any) => ({
+        title: lead.company_name || lead.organization_name || lead.name,
+        address: `${lead.city || ''}, ${lead.state || ''} ${lead.country || ''}`.trim(),
+        phoneNumber: lead.phone || lead.phone_number || lead.mobile_phone,
+        website: lead.website || lead.company_website,
+        categoryName: lead.industry || lead.keywords || 'Business Services',
+        totalScore: 5, // Apollo leads are high quality
+        reviewsCount: 0, // Apollo doesn't provide reviews
+        location: {
+          lat: null,
+          lng: null
+        },
+        description: lead.title || lead.job_title,
+        // Apollo-specific enriched data
+        email: lead.email,
+        firstName: lead.first_name,
+        lastName: lead.last_name,
+        jobTitle: lead.title || lead.job_title,
+        linkedinUrl: lead.linkedin_url,
+        companySize: lead.company_size,
+        revenue: lead.estimated_num_employees,
+        employeeCount: lead.estimated_num_employees,
       }));
     } else {
-      // Original crawler-google-places format
-      results = (run.items || []).map((place: any) => ({
-        title: place.title,
-        address: place.address,
-        phoneNumber: place.phoneNumber,
-        website: place.website,
-        categoryName: place.categoryName,
-        totalScore: place.totalScore,
-        reviewsCount: place.reviewsCount,
-        location: place.location,
-        placeId: place.placeId,
-      }));
+      // Fallback for other actors - try to get from dataset
+      if (run.defaultDatasetId) {
+        console.log('Fetching results from dataset:', run.defaultDatasetId);
+        const dataset = await apifyClient.dataset(run.defaultDatasetId).listItems();
+        results = (dataset.items || []).map((place: any) => ({
+          title: place.title,
+          address: place.address,
+          phoneNumber: place.phoneNumber,
+          website: place.website,
+          categoryName: place.categoryName,
+          totalScore: place.totalScore,
+          reviewsCount: place.reviewsCount,
+          location: place.location,
+          placeId: place.placeId,
+          permanently_closed: place.permanently_closed,
+          temporarily_closed: place.temporarily_closed,
+        }));
+      } else {
+        // Final fallback to run.items
+        results = (run.items || []).map((place: any) => ({
+          title: place.title,
+          address: place.address,
+          phoneNumber: place.phoneNumber,
+          website: place.website,
+          categoryName: place.categoryName,
+          totalScore: place.totalScore || place.rating,
+          reviewsCount: place.reviewsCount,
+          location: place.location,
+          placeId: place.placeId,
+        }));
+      }
     }
 
     // Filter out closed businesses
@@ -739,13 +796,21 @@ async function searchBusinessesByIndustry(
     return results;
 
   } catch (error) {
-    console.error(`Actor failed for ${industry}:`, error);
-    console.error('Error details:', {
+    console.error(`❌ APIFY ACTOR ERROR for ${industry} in ${location}:`, error);
+    console.error('🔍 ERROR DETAILS:', {
       message: error instanceof Error ? error.message : 'Unknown error',
+      name: error instanceof Error ? error.name : 'Unknown',
       stack: error instanceof Error ? error.stack : undefined,
       location,
-      industry
+      industry,
+      attemptedActorId: 'compass/crawler-google-places'
     });
+    
+    // Check if this is the specific "actor not found" error
+    if (error instanceof Error && error.message.includes('not found')) {
+      console.error('🚨 ACTOR NOT FOUND ERROR - The actor "compass/crawler-google-places" does not exist or is not accessible with your API key');
+    }
+    
     throw error;
   }
 }
@@ -881,13 +946,14 @@ export async function searchBusinesses(
   dataSource: 'live' | 'mock';
   message?: string;
 }> {
+  console.log('🚀 SEARCH BUSINESSES: Function called with criteria:', criteria);
   let usingLiveData = false;
   let apifyClient: ApifyClient | null = null;
   let message = '';
 
   // CRITICAL: Validate that we have a specific industry category to search for
   if (!criteria.industryCategory || criteria.industryCategory === 'all') {
-    console.log('No specific industry category provided - using mock data');
+    console.log('⚠️ SEARCH BUSINESSES: No specific industry category provided - using mock data');
     const mockBusinesses = getStrictlyFilteredMockBusinesses(criteria);
     return {
       businesses: mockBusinesses,
@@ -898,11 +964,34 @@ export async function searchBusinesses(
     };
   }
 
-  // Prefer global client first (system-wide API key)
+  // Prefer global client first (system-wide API key)  
   if (globalApifyClient) {
     apifyClient = globalApifyClient;
     usingLiveData = true;
     message = 'Using system Apify API key for live data';
+    
+    // Test what actors are actually available
+    console.log('🔧 TESTING: Checking available actors...');
+    try {
+      // Try some common actor names to see what works
+      const testActors = [
+        'compass/crawler-google-places',
+        'apify/google-maps-scraper', 
+        'compass/google-maps-scraper',
+        'compass/google-places-scraper'
+      ];
+      
+      for (const actorId of testActors) {
+        try {
+          const actorInfo = await globalApifyClient.actor(actorId).get();
+          console.log(`✅ FOUND WORKING ACTOR: "${actorId}" - ${actorInfo?.name}`);
+        } catch (e) {
+          console.log(`❌ ACTOR NOT FOUND: "${actorId}"`);
+        }
+      }
+    } catch (testError) {
+      console.log('🚨 Actor testing failed:', testError);
+    }
   }
 
   // Fallback to user-specific API client if available
