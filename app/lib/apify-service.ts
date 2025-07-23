@@ -686,10 +686,13 @@ async function searchBusinessesByIndustry(
   try {
     const config = getActorConfig();
     console.log(`Using actor ${config.actorId} for ${industry} search in ${location}`);
+    console.log('Actor input:', JSON.stringify(config.input, null, 2));
     
     const run = await apifyClient.actor(config.actorId).call(config.input, {
       timeout: 300, // 5 minutes
     });
+
+    console.log('Apify run completed:', run?.status);
 
     // Handle different response formats from different actors
     let results = [];
@@ -737,6 +740,12 @@ async function searchBusinessesByIndustry(
 
   } catch (error) {
     console.error(`Actor failed for ${industry}:`, error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      location,
+      industry
+    });
     throw error;
   }
 }
@@ -889,8 +898,15 @@ export async function searchBusinesses(
     };
   }
 
-  // Try to get user-specific API client first
-  if (userEmail) {
+  // Prefer global client first (system-wide API key)
+  if (globalApifyClient) {
+    apifyClient = globalApifyClient;
+    usingLiveData = true;
+    message = 'Using system Apify API key for live data';
+  }
+
+  // Fallback to user-specific API client if available
+  if (!apifyClient && userEmail) {
     const { client, hasValidKey } = await getUserApifyClient(userEmail);
     if (hasValidKey && client) {
       apifyClient = client;
@@ -899,13 +915,6 @@ export async function searchBusinesses(
     } else {
       message = 'No valid API key configured - using sample data';
     }
-  }
-
-  // Fallback to global client if available
-  if (!apifyClient && globalApifyClient) {
-    apifyClient = globalApifyClient;
-    usingLiveData = true;
-    message = 'Using system Apify API key for live data';
   }
 
   // If no API client available, return mock data
