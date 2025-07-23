@@ -184,5 +184,12 @@ dist
 .vscode/
 .idea/
 
+# Environment files in app directory
+app/.env
+app/.env.local
+app/.env.development.local
+app/.env.test.local
+app/.env.production.local
+
 # Local Netlify folder
 .netlify
