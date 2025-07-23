@@ -7,13 +7,19 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 45; // 45 seconds max duration for Netlify functions
 
 export async function GET(req: NextRequest) {
+  // Declare variables outside try block so they're accessible in catch
+  let location = '';
+  let industryCategory = '';
+  let industryTypesParam = '';
+  let radius = 25;
+  
   try {
     console.log('🌐 API ROUTE: Starting business search request');
     const { searchParams } = new URL(req.url);
-    const location = searchParams.get('location') || '';
-    const industryCategory = searchParams.get('industryCategory') || '';
-    const industryTypesParam = searchParams.get('industryTypes') || '';
-    const radius = parseInt(searchParams.get('radius') || '25');
+    location = searchParams.get('location') || '';
+    industryCategory = searchParams.get('industryCategory') || '';
+    industryTypesParam = searchParams.get('industryTypes') || '';
+    radius = parseInt(searchParams.get('radius') || '25');
 
     console.log('📝 API ROUTE: Search parameters:', { location, industryCategory, industryTypesParam, radius });
 
