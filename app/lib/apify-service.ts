@@ -680,7 +680,6 @@ async function searchBusinessesByIndustry(
     console.log('🚀 Calling apifyClient.actor() with actorId:', config.actorId);
     const run = await apifyClient.actor(config.actorId).call(config.input, {
       timeout: 30, // 30 seconds - optimized for Netlify functions
-      waitForFinish: 45, // Wait up to 45 seconds total
     });
     
     console.log('✅ Actor call successful, run status:', run?.status);
