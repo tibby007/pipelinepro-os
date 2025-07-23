@@ -4,7 +4,7 @@ import { searchBusinesses, SearchCriteria } from '@/lib/apify-service';
 import { getCurrentUserEmail } from '@/lib/user-service';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30; // 30 seconds max duration for Netlify functions
+export const maxDuration = 15; // 15 seconds max duration for Netlify functions
 
 export async function GET(req: NextRequest) {
   // Declare variables outside try block so they're accessible in catch

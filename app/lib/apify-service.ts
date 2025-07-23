@@ -535,7 +535,7 @@ async function searchBusinessesByIndustry(
             searchStringsArray: [
               `restaurants in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 2,
+            maxCrawledPlacesPerSearch: 1,
             language: 'en',
             country: 'us',
           }
@@ -548,7 +548,7 @@ async function searchBusinessesByIndustry(
             searchStringsArray: [
               `medical clinics in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 2,
+            maxCrawledPlacesPerSearch: 1,
             language: 'en',
             country: 'us',
           }
@@ -675,7 +675,7 @@ async function searchBusinessesByIndustry(
     
     console.log('🚀 Calling apifyClient.actor() with actorId:', config.actorId);
     const run = await apifyClient.actor(config.actorId).call(config.input, {
-      timeout: 20, // 20 seconds - further reduced for faster response
+      timeout: 10, // 10 seconds - very aggressive timeout for immediate results
     });
     
     console.log('✅ Actor call successful, run status:', run?.status);
@@ -1008,17 +1008,22 @@ export async function searchBusinesses(
   }
 
   try {
-    console.log('Starting STRICT Apify search with criteria:', criteria);
+    console.log('Starting QUICK Apify search with aggressive timeouts:', criteria);
     console.log('Target industry category:', criteria.industryCategory);
     
-    // Use new multi-actor approach with retry logic
-    console.log(`Starting multi-actor search for ${criteria.industryCategory} in ${criteria.location}`);
-    
-    const items = await searchWithRetry(
+    // AGGRESSIVE TIMEOUT: If any part takes too long, immediately fallback to mock data
+    const searchPromise = searchBusinessesByIndustry(
       criteria.industryCategory as string,
       criteria.location,
       apifyClient
     );
+    
+    // Race the search against a very short timeout
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('FORCED_TIMEOUT: Search taking too long, using mock data')), 8000); // 8 second hard limit
+    });
+    
+    const items = await Promise.race([searchPromise, timeoutPromise]) as any[];
     
     console.log(`Multi-actor search completed: ${items.length} items retrieved`);
 
