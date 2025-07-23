@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const prospect = await prisma.prospect.findFirst({
       where: {
         id: prospectId,
-        userId: session.user.id,
+        assignedToId: session.user.id,
       },
       include: {
         qualifications: {
