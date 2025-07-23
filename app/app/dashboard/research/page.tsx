@@ -75,9 +75,16 @@ export default function ResearchPage() {
         description: 'Finding businesses across multiple industries using live data from Apify',
       });
 
+      // Create AbortController for timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds timeout
+      
       const response = await fetch(`/api/prospects/search?${params}`, {
-        timeout: 90000, // 90 seconds timeout
+        signal: controller.signal,
       });
+      
+      // Clear timeout if request completes successfully
+      clearTimeout(timeoutId);
       
       // Handle 504 timeout errors
       if (response.status === 504) {
@@ -130,11 +137,21 @@ export default function ResearchPage() {
 
     } catch (error: any) {
       console.error('Search error:', error);
-      toast({
-        title: 'Search failed',
-        description: error.message || 'Failed to search for businesses. Please try again.',
-        variant: 'destructive',
-      });
+      
+      // Handle AbortError from timeout
+      if (error.name === 'AbortError') {
+        toast({
+          title: 'Search timed out',
+          description: 'The search is taking longer than expected. Please try with a smaller search radius or different location.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Search failed',
+          description: error.message || 'Failed to search for businesses. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsSearching(false);
     }
