@@ -71,9 +71,12 @@ export async function POST(request: NextRequest) {
           await prisma.qualification.create({
             data: {
               prospectId,
-              score: result.score,
-              status: result.qualified ? 'QUALIFIED' : 'NOT_QUALIFIED',
-              notes: result.feedback,
+              userId: session.user.id,
+              totalScore: result.score,
+              maxScore: 100,
+              qualificationStatus: result.qualified ? 'QUALIFIED' : 'DISQUALIFIED',
+              responses: { feedback: result.feedback },
+              isComplete: true,
             },
           });
         }

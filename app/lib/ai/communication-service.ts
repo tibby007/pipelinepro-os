@@ -19,7 +19,7 @@ Focus on understanding their business needs and qualifying them for appropriate 
         role: 'user',
         content: `Generate a personalized initial outreach message for:
 Business Name: ${prospect.businessName}
-Industry: ${prospect.industryType}
+Industry: ${prospect.businessType}
 Location: ${prospect.city}, ${prospect.state}
 
 The message should:
@@ -58,7 +58,7 @@ The message should:
       { role: 'system', content: this.systemPrompt },
       {
         role: 'user',
-        content: `Generate 5 pre-qualification questions for a ${prospect.industryType} business.
+        content: `Generate 5 pre-qualification questions for a ${prospect.businessType} business.
 ${previousAnswers ? `Previous answers: ${JSON.stringify(previousAnswers)}` : ''}
 
 Questions should cover:
@@ -132,8 +132,8 @@ Return a JSON object with:
         role: 'user',
         content: `Generate a professional message requesting documents from:
 Business: ${prospect.businessName}
-Industry: ${prospect.industryType}
-Qualification Score: ${qualification.score}
+Industry: ${prospect.businessType}
+Qualification Score: ${qualification.totalScore}
 
 Based on their qualification, request the appropriate documents:
 - Bank statements (3-6 months)
@@ -162,8 +162,8 @@ Make it friendly but clear about what's needed and why.`,
         role: 'user',
         content: `Prepare a lender submission summary for:
 Business: ${prospect.businessName}
-Industry: ${prospect.industryType}
-Qualification Score: ${qualification.score}
+Industry: ${prospect.businessType}
+Qualification Score: ${qualification.totalScore}
 Documents: ${documents.join(', ')}
 
 Create:

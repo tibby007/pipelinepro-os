@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         email: prospectEmail || from,
       },
       include: {
-        user: true,
+        assignedTo: true,
       },
     });
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     await prisma.outreachActivity.create({
       data: {
         prospectId: prospect.id,
-        userId: prospect.userId,
+        userId: prospect.assignedToId!,
         type: channel,
         subject: subject || 'Incoming Message',
         content: text,
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const outgoingActivity = await prisma.outreachActivity.create({
       data: {
         prospectId: prospect.id,
-        userId: prospect.userId,
+        userId: prospect.assignedToId!,
         type: channel,
         subject: `Re: ${subject || 'Your Inquiry'}`,
         content: aiResponse,
@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
     // Queue the response to be sent (you'll need to implement the actual sending)
     // This could be through SendGrid, AWS SES, Twilio, etc.
     await queueEmailResponse({
-      to: prospect.email,
-      from: prospect.user.email || 'noreply@pipelinepro.com',
+      to: prospect.email!,
+      from: prospect.assignedTo?.email || 'noreply@pipelinepro.com',
       subject: outgoingActivity.subject!,
       text: aiResponse,
       activityId: outgoingActivity.id,
