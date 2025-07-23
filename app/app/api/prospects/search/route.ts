@@ -4,7 +4,7 @@ import { searchBusinesses, SearchCriteria } from '@/lib/apify-service';
 import { getCurrentUserEmail } from '@/lib/user-service';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // 60 seconds max duration for Netlify functions
+export const maxDuration = 45; // 45 seconds max duration for Netlify functions
 
 export async function GET(req: NextRequest) {
   try {
@@ -66,18 +66,51 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error searching businesses:', error);
+    console.error('❌ API ROUTE ERROR:', error);
     
-    // Return a more specific error message
+    // Return a more specific error message with proper JSON structure
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
+    // For timeout errors, return mock data instead of failing
+    if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
+      console.log('⏰ API TIMEOUT: Returning mock data as fallback');
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          businesses: [],
+          searchCriteria: {
+            location: location || 'Unknown',
+            industryCategory: industryCategory || 'Unknown',
+            industryTypes: [],
+            radius: radius || 25
+          },
+          totalResults: 0,
+          dataSource: 'mock',
+          message: 'Search timed out - please try with a smaller search area or different location',
+          source: 'mock'
+        }
+      });
+    }
     
     return NextResponse.json(
       { 
+        success: false,
         error: 'Failed to search businesses',
         details: errorMessage,
-        fallback: true 
+        data: {
+          businesses: [],
+          totalResults: 0,
+          dataSource: 'mock',
+          message: errorMessage
+        }
       },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     );
   }
 }
