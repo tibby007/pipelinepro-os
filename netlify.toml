@@ -1,5 +1,5 @@
 [build]
-  command = "cd app && npm run build"
+  command = "cd app && npm install --legacy-peer-deps && npm run build"
   publish = "app/.next"
 
 [build.environment]
