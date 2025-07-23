@@ -75,8 +75,29 @@ export default function ResearchPage() {
         description: 'Finding businesses across multiple industries using live data from Apify',
       });
 
-      const response = await fetch(`/api/prospects/search?${params}`);
-      const data = await response.json();
+      const response = await fetch(`/api/prospects/search?${params}`, {
+        timeout: 90000, // 90 seconds timeout
+      });
+      
+      // Handle 504 timeout errors
+      if (response.status === 504) {
+        throw new Error('Search timed out. The search is taking longer than expected. Please try with a smaller search radius or different location.');
+      }
+      
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Response is not JSON:', await response.text());
+        throw new Error('Server returned invalid response. Please try again.');
+      }
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('JSON parsing error:', jsonError);
+        throw new Error('Failed to parse server response. The search may have timed out. Please try again with a smaller search area.');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Search failed');

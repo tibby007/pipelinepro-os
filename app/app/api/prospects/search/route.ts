@@ -4,6 +4,7 @@ import { searchBusinesses, SearchCriteria } from '@/lib/apify-service';
 import { getCurrentUserEmail } from '@/lib/user-service';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 60 seconds max duration for Netlify functions
 
 export async function GET(req: NextRequest) {
   try {

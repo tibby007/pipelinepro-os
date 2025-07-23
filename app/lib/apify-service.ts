@@ -537,7 +537,7 @@ async function searchBusinessesByIndustry(
               `cafes in ${location}`,
               `food service in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 10,
+            maxCrawledPlacesPerSearch: 5,
             language: 'en',
             country: 'us',
           }
@@ -552,7 +552,7 @@ async function searchBusinessesByIndustry(
               `doctors offices in ${location}`,
               `dental offices in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 10,
+            maxCrawledPlacesPerSearch: 5,
             language: 'en',
             country: 'us',
           }
@@ -567,7 +567,7 @@ async function searchBusinessesByIndustry(
               `spas in ${location}`,
               `nail salons in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 10,
+            maxCrawledPlacesPerSearch: 5,
             language: 'en',
             country: 'us',
           }
@@ -582,7 +582,7 @@ async function searchBusinessesByIndustry(
               `car mechanics in ${location}`,
               `tire shops in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 10,
+            maxCrawledPlacesPerSearch: 5,
             language: 'en',
             country: 'us',
           }
@@ -597,7 +597,7 @@ async function searchBusinessesByIndustry(
               `fitness centers in ${location}`,
               `yoga studios in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 10,
+            maxCrawledPlacesPerSearch: 5,
             language: 'en',
             country: 'us',
           }
@@ -612,7 +612,7 @@ async function searchBusinessesByIndustry(
               `veterinarians in ${location}`,
               `pet grooming in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 10,
+            maxCrawledPlacesPerSearch: 5,
             language: 'en',
             country: 'us',
           }
@@ -627,7 +627,7 @@ async function searchBusinessesByIndustry(
               `boutique shops ${location}`,
               `local retailers ${location}`
             ],
-            maxCrawledPlacesPerSearch: 10,
+            maxCrawledPlacesPerSearch: 5,
             language: 'en',
             country: 'us',
           }
@@ -679,7 +679,8 @@ async function searchBusinessesByIndustry(
     
     console.log('🚀 Calling apifyClient.actor() with actorId:', config.actorId);
     const run = await apifyClient.actor(config.actorId).call(config.input, {
-      timeout: 300, // 5 minutes
+      timeout: 60, // 1 minute - much faster for web requests
+      waitForFinish: 120, // Wait up to 2 minutes for completion
     });
     
     console.log('✅ Actor call successful, run status:', run?.status);
@@ -970,28 +971,7 @@ export async function searchBusinesses(
     usingLiveData = true;
     message = 'Using system Apify API key for live data';
     
-    // Test what actors are actually available
-    console.log('🔧 TESTING: Checking available actors...');
-    try {
-      // Try some common actor names to see what works
-      const testActors = [
-        'compass/crawler-google-places',
-        'apify/google-maps-scraper', 
-        'compass/google-maps-scraper',
-        'compass/google-places-scraper'
-      ];
-      
-      for (const actorId of testActors) {
-        try {
-          const actorInfo = await globalApifyClient.actor(actorId).get();
-          console.log(`✅ FOUND WORKING ACTOR: "${actorId}" - ${actorInfo?.name}`);
-        } catch (e) {
-          console.log(`❌ ACTOR NOT FOUND: "${actorId}"`);
-        }
-      }
-    } catch (testError) {
-      console.log('🚨 Actor testing failed:', testError);
-    }
+    // Actor is working, removed debug testing for performance
   }
 
   // Fallback to user-specific API client if available
