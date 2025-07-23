@@ -533,11 +533,9 @@ async function searchBusinessesByIndustry(
           actorId: 'compass/crawler-google-places',
           input: {
             searchStringsArray: [
-              `restaurants in ${location}`,
-              `cafes in ${location}`,
-              `food service in ${location}`
+              `restaurants in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 3,
+            maxCrawledPlacesPerSearch: 2,
             language: 'en',
             country: 'us',
           }
@@ -548,11 +546,9 @@ async function searchBusinessesByIndustry(
           actorId: 'compass/crawler-google-places',
           input: {
             searchStringsArray: [
-              `medical clinics in ${location}`,
-              `doctors offices in ${location}`,
-              `dental offices in ${location}`
+              `medical clinics in ${location}`
             ],
-            maxCrawledPlacesPerSearch: 3,
+            maxCrawledPlacesPerSearch: 2,
             language: 'en',
             country: 'us',
           }
@@ -679,7 +675,7 @@ async function searchBusinessesByIndustry(
     
     console.log('🚀 Calling apifyClient.actor() with actorId:', config.actorId);
     const run = await apifyClient.actor(config.actorId).call(config.input, {
-      timeout: 30, // 30 seconds - optimized for Netlify functions
+      timeout: 20, // 20 seconds - further reduced for faster response
     });
     
     console.log('✅ Actor call successful, run status:', run?.status);
